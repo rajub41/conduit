@@ -1,0 +1,46 @@
+
+Databus Release Process
+
+  Databus consists of the following three components
+  
+  
+*---------------------------------+----------------------------------------------------------------------------+
+|| Component Name                 |   Source Location														   |
+*---------------------------------+----------------------------------------------------------------------------+ 
+|  Databus Collectors & Agents    |  {{{https://github.com/InMobi/scribe} https://github.com/InMobi/scribe}}   |
+*---------------------------------+----------------------------------------------------------------------------+ 
+|  Databus Workers                |  {{{https://github.com/InMobi/conduit} https://github.com/InMobi/conduit}} |
+*---------------------------------+----------------------------------------------------------------------------+ 
+  
+ << How will the release model look like>>
+ 
+  biweekly trains going to production which may contain fixes/features spanning across different databus components.
+  
+ <<How do i file a ticket against Databus>>
+ 
+  Use - {{{}Link}} and select component as Databus
+  
+  <<What happens after i file a ticket>>
+  
+  Databus team analyzes and slots the ticket for a specific train.
+  If you aren't happy with the slotting please send a note to - {{{ }databus-dev@inmobi.com}}
+  
+  <<How to prepare Databus for a launch>>
+  
+  1. Tag the ticket your are fixing with WhiteBoard field containing the train number it's going in. 
+  
+  2. Active development happens on trunk.During development all atrifact's have SNAPSHOT as versions.
+  
+  3. For releasing -> fix all versions to a release number.
+  
+    Create a branch & tag with your release number on GITHUB. Publish databus & scribe packages in APT repository.
+    Publish messaging-client & client-library in INMOBI maven repository.
+    Follow the steps specified at {{{ }ReleasingDatabus}} for making a release.
+    
+  << Current Versions of Databus on Grid>>
+  
+    Please follow this link to know the current running versions of databus on grid.
+    
+    
+    
+    

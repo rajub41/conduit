@@ -1,0 +1,90 @@
+
+Conduit
+
+  Data Transport between Producers and Consumers.
+  
+  The current data flows volumes are captured here - DataStreams
+  
+Current Data Transport Problems
+
+  * Adhoc log aggregation
+  
+  * Duplicate data transfer
+  
+  * Tightly coupled - brittle
+  
+  * No Reliability Guarantees
+  
+  * Network glitches lead to huge backlog
+  
+  * High peak bandwidth requirement
+  
+  * No support or different data paths for near real-time use
+  
+Goals
+
+  * Capability to transport event data between distributed sub-systems in reliable, efficient, scalable and uniform way for batch as well as near real-time consumption.
+  
+  * Decouple data consumers from producers
+  
+  * Savings on Network Bandwidth
+  
+    * Reduce peak network requirements due to bulk data transfers in spurts.
+  
+    * Minimize Duplicate data transfers across WAN
+    
+What Data Bus is NOT ?
+
+  * Filtering/transformation layer
+  
+    * Data is delivered in raw format as being produced
+  
+  * Data Store
+  
+    * Consumers are expected to consume the data within certain SLA, after which ALL data is purged
+  
+  * Batching semantics
+  
+    * Consumer decide their own batching semantics –Same data stream can be used by multiple consumers with different needs
+  
+~~Users
+
+  * All event data consuming systems
+  
+    * Reporting
+  
+    * Monetization
+  
+    * AdServ ?
+  
+  * All event data producing systems (as dependency)
+  
+    * Adserv
+  
+    * Click
+  
+    * Beacon
+
+    * Monetization 
+
+Technology Evaluation
+
+    FLUME, KAFKA and Scribe have been evaluated. Details - {{{ } DataTransportTechnology.pptx}}
+  
+    Details on Scribe setup/scenarios/usecases - {{{} ScribeArch}}
+  
+Design
+
+    Scribe Agents on each producer node. Producer application log messages using API which will write to the local scribe agent.
+  Local scribe agent forward message to Scribe collectors. Scribe collectors writes to HDFS. Consumers pull data directly from HDFS.
+  
+Salient Features
+
+ 1 Data compression: All data is kept in compressed form in HDFS. All cross dc transfers are of compressed data.
+ 
+ * Data merging: Merging of local streams from multiple data-center into the single Hadoop cluster closer to the consumer.
+ 
+ * Mirroring: Mirroring of merged data streams into another Hadoop cluster. Enabling BCP.
+ 
+ * Data retention: Manage data retention in the cluster.
+ 
