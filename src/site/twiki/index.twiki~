@@ -1,0 +1,50 @@
+%BREADCRUMBS{ format="$name" separator=" » "}%
+---+++ Conduit World
+
+   * [[./developer/ConduitWorld][Conduit World]]
+---+++ Conduit Design
+   * [[./developer/ConduitDesign][Conduit Design]]
+
+---+++ Conduit Release Process
+   * [[./develop/ConduitReleaseProcess][Release Process documented at]]
+
+---+++ Spec
+   * [[./developer/ConduitSpec][Specs for producer and consumer]]
+
+---+++ Streams/Onboarding Status for Conduit
+   * [[https://twiki.corp.inmobi.com/TechPlatform/ConduitStreams][Details regarding current onboarding status can be found here]]
+
+---+++ Installing Conduit
+   * [[./developer/InstallingConduit][Installing Conduit]]
+   * [[./developer/ConduitDevSetup][Conduit dev setup]]
+---+++ Conduit Test Coverage
+
+   * [[http://twiki.corp.inmobi.com/TechPlatform/ConduitTestCoverage][Conduit Test Coverage]]
+---+++ Conduit Tech Stack Evaluation Score
+
+   * [[http://twiki.corp.inmobi.com/TechPlatform/ConduitTechStackScore][Conduit Tech Stack Evaluation]]
+---+++ Conduit Lite
+   * [[http://twiki.corp.inmobi.com/TechPlatform/ConduitLite][Conduit Lite]]
+---+++ Conduit Audit
+   * [[https://twiki.corp.inmobi.com/TechPlatform/AuditFeature][Audit Feature]]
+---+++ Conduit Visualization
+   * [[https://twiki.corp.inmobi.com/TechPlatform/ConduitVisualization][Conduit Visualization]]
+---+++ Conduit Admin Script
+
+   * [[https://twiki.corp.inmobi.com/TechPlatform/ConduitAdminScript][Admin Script]]
+---+++ Conduit Oncall
+
+   * [[https://twiki.corp.inmobi.com/TechPlatform/ConduitOnCall][Conduit Oncall]]
+---+++ Conduit Migration from 1.x to 2.x
+   * [[https://twiki.corp.inmobi.com/TechPlatform/MigrationToConduit2][Conduit Migration]]
+---+++ Conduit FAQ
+
+   1 Issues faced/solutions during integration can be found [[ConduitFAQ][here]]
+<span style="color: #0000ff;"><span style="text-decoration: underline;"> </span></span>
+
+-- Main.SharadAgarwal - 2011-11-22
+
+%COMMENT%
+
+   * [[%ATTACHURL%/Conduit_v1.pptx][Conduit_v1.pptx]]: Conduit Architecture
+

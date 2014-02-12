@@ -1,0 +1,80 @@
+%BREADCRUMBS{ format="$name" separator=" » "}%
+
+---+   Databus Admin Script
+
+---++ Overview
+
+Databus provides a set of commands that allow user to perform various admin level actions. These commands are exposed via *databus-utils.sh* script that is bundled as part of databus deb package. All these commands work with databus.xml as a mandatory input.
+---++ Admin Actions
+---+++    <span style="color: #ffff00; font-size: 17px; line-height:1em;"> A)  Streams validation</span>
+---+++++ <span style="font-weight: normal;"> Command syntax:</span>
+
+./databus-utils.sh admin *-verify* [-stream (comma separated stream names)] [-mode (comma separated stream modes: {local,merge,mirror})] [-cluster (comma separated cluster names)] &lt;-start (YYYY/MM/DD/HH/mm) | -relstart (minutes from now)&gt; &lt;-stop (YYYY/MM/DD/HH/mm) | -relstop (minutes from now)&gt; [-numThreads (number of threads for parallel listing)] &lt;-conf (databus.xml file path)&gt;
+---+++++ <span style="font-weight: normal;">Overview:</span>
+
+This command performs validation of given stream(s) running in the given mode(s) on the given destination cluster(s) and reports any inconsistencies. The inconsistencies reported for each &lt;stream, mode, destination cluster&gt; are: finding missing paths between source and destination cluster, finding holes in source and destination clusters, finding duplicates in destination cluster (in case of merge mode).
+---+++++ <span style="font-weight: normal;">Arguments:</span>
+
+*-stream*: comma separated stream names to validate; optional. If not given, all source streams will be derived from databus.xml and considered as input.
+
+*-mode*: comma separated stream modes; optional. Supported values are: local,merge,mirror. If not given, all modes will be considered for each stream.
+
+*-cluster*: comma separated cluster names; optional. If not given, all clusters will be derived from databus.xml and considered as input.
+
+*-start | - relstart*: start time of source cluster to consider; *mandatory*. Either provide absolute start time or provide relative start time from now (and not both).
+
+*-stop | - relstop*: stop time of source cluster to consider; *mandatory*. Either provide absolute stop time or provide relative stop time from now (and not both).
+
+*-numThreads*: number of threads to be used to perform parallel recursive listing of source/destination clusters in the given time range; optional. Default value is 100.
+
+*-conf*: the path containing databus.xml; *mandatory*.
+---+++ <span style="font-weight: normal;">B) Fix any missing paths/holes</span>
+---+++++ <span style="font-weight: normal;">Command syntax:</span>
+
+<span style="font-weight: normal;">./databus-utils.sh admin </span><span style="font-weight: normal;"> *-fix* </span><span style="font-weight: normal;"> &lt;-stream (stream name)&gt; &lt;-mode (stream mode: {local,merge,mirror})&gt; &lt;-cluster (cluster name)&gt; &lt;-start (YYYY/MM/DD/HH/mm)&gt; &lt;-stop (YYYY/MM/DD/HH/mm)&gt; [-numThreads (number of threads for parallel listing)] &lt;-conf (databus.xml file path)&gt;</span>
+---+++++ <span style="font-weight: normal;">Overview:</span>
+
+This command finds and fixes any inconsistencies of the given stream running in the given mode on the given destination cluster. The inconsistencies fixed by this command are: copying all missing paths between source and destination cluster, fixing holes in the destination cluster (in case of merge mode).
+
+If any hole is found in source cluster (in case of mirror mode), this command will throw an exception. User should first run the command on source cluster to fix its inconsistency and then re-run on destination cluster.
+
+*NOTE: THIS COMMAND NEEDS SHUTDOWN OF THE DATABUS WORKER RUNNING ON DESTINATION CLUSTER*. The reason is that this command will actually perform data movement by copying data from source cluster to destination cluster. This data movement is not synchronized with any databus worker runnning at the same destination cluster, and hence they both may interfere with each other.
+
+Also in production setup, this command should be run with the same user login ('databus') as used to start databus worker in production cluster.
+---+++++ <span style="font-weight: normal;">Arguments:</span>
+
+*-stream*: stream name whose inconsistency is to be fixed; *mandatory*.
+
+*-mode*: stream mode; *mandatory*. Supported values are: local,merge,mirror.
+
+*-cluster*: cluster name where input stream is running in input mode; mandatory.
+
+*-start*: absolute start time of source cluster to consider; *mandatory*.
+
+*-stop*: absolute stop time of source cluster to consider; *mandatory*.
+
+*-numThreads*: number of threads to be used to perform parallel recursive listing of source/destination clusters in the given time range; optional. Default value is 100.
+
+*-conf*: the path containing databus.xml; *mandatory*.
+---+++ <span style="font-weight: normal;">C) Create checkpoint for a stream</span>
+---+++++ <span style="font-weight: normal;"><span style="font-weight: normal;">Command syntax:</span></span>
+
+<span style="font-weight: normal;">./databus-utils.sh admin </span><span style="font-weight: normal;"> *-checkpoint* </span><span style="font-weight: normal;"> &lt;-stream (stream name)&gt; &lt;-destCluster (destination cluster)&gt; [-srcCluster (source cluster) ] &lt;-date (YYYY/MM/DD/HH/mm)&gt; &lt;-conf (databus.xml file path)&gt;</span>
+---+++++ <span style="font-weight: normal;"><span style="font-weight: normal;">Overview:</span></span>
+
+<span style="font-weight: normal;">This command creates checkpoint of the given stream on the given destination cluster corresponding to the given source cluster. The checkpoint input is taken in the above date format.</span>
+---+++++ <span style="font-weight: normal;">Arguments:</span>
+
+*-stream*: stream name whose checkpoint is to be created; *mandatory*.
+
+*-destCluster*: destination cluster where checkpoint will be created and stored; *mandatory*.
+
+*-srcCluster*: source cluster whose checkpoint is being written; *mandatory*.
+
+*-date*: the checkpoint value of source cluster; *mandatory*.
+
+*-conf*: the path containing databus.xml; *mandatory*.
+
+-- Main.SatishMittal - 2013-05-14
+
+%COMMENT%

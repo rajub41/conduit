@@ -1,0 +1,55 @@
+%BREADCRUMBS{ format="$name" separator=" » "}%
+
+---+!! %TOPIC%
+
+<br />%TOC%
+
+---+++ Overview
+
+Conduit Visualization project helps in visualizing data that has been delivered by conduit within a given time period. The dashboard allows one to select the time range, cluster and stream for which they wish to see the graph.
+
+The dashboard will query the database populated by the feeder service to get relevant information. Data flows covers all tiers
+---+++ Setup
+---++++ Installation
+
+Install the deb package databus-visualization.
+
+On installing the package, conf files are copied to /usr/local/conduit-visualization/conf, the war is copied directly to /var/lib/tomcat7/webapps and the environment file setenv.sh is copied to /var/lib/tomcat7/bin
+---++++ Configuration
+
+The conf files are audit-feeder.properties(same as that used for feeder service) and visualization.properties
+
+Sample Configuration: [[%PUBURL%/TechPlatform/AuditFeature/audit-feeder.properties_copy.txt][audit-feeder.properties]] [[%ATTACHURL%/visualization.properties][visualization.properties]]
+
+All fields prperties in visualization.properties should be set. Mandatory fields in audit-feeder.properties are jdbc.driver.class.name, db.url, db.username, db.password, audit.table.master and rollup.tilldays
+
+Hadoop home path should be set in /var/lib/tomcat7/bin/setenv.sh file which is copied on installing the deb, before restarting tomcat
+---+++++ Config Fields in visualization.properties
+
+<table align="left" border="1" cellpadding="1" cellspacing="1"> <tbody> <tr> <td> *Config Name* </td> <td> *Desription* </td> <td> *Example* </td> </tr> <tr> <td>conduit.xml.path</td> <td>The path where databus.xml is stored according to which cluster and stream configuration for dashboard are loaded</td> <td>/usr/local/databus/conf/databus.xml</td> </tr> <tr> <td>percentile.string</td> <td>Comma seperated list of percentiles for calculating latency. Any number of percentiles can be given but minimum is one</td> <td>80,90,95,99,99.9,99.99</td> </tr> <tr> <td>publisher.sla</td> <td>The SLA in minutes for all the messages to reach publisher</td> <td>2</td> </tr> <tr> <td>agent.sla</td> <td>The SLA in minutes for all the messages to reach agent</td> <td>2</td> </tr> <tr> <td>vip.sla</td> <td>The SLA in minutes for all the messages to reach vip</td> <td>2</td> </tr> <tr> <td>collector.sla</td> <td>The SLA in minutes for all the messages to reach collector</td> <td>2</td> </tr> <tr> <td>hdfs.sla</td> <td>The SLA in minutes for all the messages to reach hdfs</td> <td>3</td> </tr> <tr> <td>local.sla</td> <td>The SLA in minutes for all the messages to reach local tier</td> <td>3</td> </tr> <tr> <td>merge.sla</td> <td>The SLA in minutes for all the messages to reach merge tier</td> <td>5</td> </tr> <tr> <td>mirror.sla</td> <td>The SLA in minutes for all the messages to reach mirror tier</td> <td>6</td> </tr> <tr> <td>percentile.for.sla</td> <td>
+
+ The percentile for which the corresponding latency is taken into consideration for comparing with sla
+
+ Note: This value should be a part of percentile.string list </td> <td>99.99</td> </tr> <tr> <td>percentage.for.loss</td> <td>The percentage that is to be taken as loss margin. If difference between numbers of two to-be compared entities is more than percentage.for.loss of the compared-to entity then it is considered to be in *unhealthy* state.</td> <td>0.2</td> </tr> <tr> <td>percentage.for.warn</td> <td>
+
+ The percentage that is to be taken as warn margin. If difference between numbers of two to-be compared entities is more than percentage.for.warn of the compared-to entity then the entity is considered to be in *warning* state.
+
+ Note: percentage.for.warn should be less than percentage.for.loss </td> <td>0.02</td> </tr> <tr> <td>max.start.time</td> <td>The maximum start time before which a start date cannot be selected in the filter. The date should be entered in the format of dd-MM-yyyy</td> <td>
+
+ 01-08-2013
+
+ Date before 01-08 say 31-07 cannot be selected in the date filter of dashboard. </td> </tr> <tr> <td>max.time.range.interval.in.hours</td> <td>The maximum time range in hours that user can query for in the dashboard.</td> <td>
+
+ 24 </td> </tr> <tr> <td>loss.warn.threshold.diff.in.mins</td> <td>Difference in minutes for loss SLA and warn SLA . The difference is the same for all tiers.</td> <td>
+
+ 1
+
+For hdfs tier, if hdfs.sla = 3, then if latency &gt;3, it is considered to be in *unhealthy* state. If latency &lt;=3 and latency &gt; 3-(loss.warn.threshold.diff.in.mins) then it is in *warn* state, and healthy if *latency* &lt;= 3-(loss.warn.threshold.diff.in.mins)</td> </tr> </tbody> </table> *Note*: tomcat should be restarted for dashboard to reflect changes made to config files
+---++++ Logs
+
+The logs for the dashboard can be checked at /var/log/visualization and tomcat logs can be checked at either /var/log/tomcat7 or $CATALINA_HOME/logs
+
+-- Main.AnnapurnaVmss - 2013-08-01
+
+<br />%COMMENT%
+

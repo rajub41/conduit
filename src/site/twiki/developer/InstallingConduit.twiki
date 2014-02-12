@@ -1,0 +1,12 @@
+---+++ Installing Conduit
+   1. Install & setup inmobi supported version of Hadoop
+   1. Install & setup inmobi supported version of ZK
+   1. Install conduit agents : Package - scribe-server-orig
+   1. Install conduit collectors : Package - scribe-server-hdfs-orig
+   1. Install conduit workers : Package - databus
+All packages for conduit are available in the INMOBI APT repository.
+
+---+!! -- Main.InderbirSingh - 2012-03-12
+
+%COMMENT%
+
