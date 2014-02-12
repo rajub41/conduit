@@ -1,8 +1,5 @@
-%BREADCRUMBS{ format="$name" separator=" » "}%
 
 ---+!! Dev setup installation
-
-%TOC%
 
 ---+++ Hadoop Setup
 
@@ -90,8 +87,4 @@ To change the open file handle count to 10240, do the following
    I. Logout and login back for the changes to get reflected.
    I. Restart the daemons for the change to effect on them
    I. Verify the limits by looking /proc/<pid>/limits
-
--- Main.NishchayP - 2012-09-04
-
-%COMMENT%
 

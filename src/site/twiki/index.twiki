@@ -1,4 +1,4 @@
-%BREADCRUMBS{ format="$name" separator=" » "}%
+
 ---+++ Conduit World
 
    * [[./developer/ConduitWorld][Conduit World]]
@@ -13,27 +13,18 @@
    * [[./developer/ConduitDevSetup][Conduit dev setup]]
 ---+++ Conduit Test Coverage
 
-   * [[http://twiki.corp.inmobi.com/TechPlatform/ConduitTestCoverage][Conduit Test Coverage]]
----+++ Conduit Tech Stack Evaluation Score
-
-   * [[http://twiki.corp.inmobi.com/TechPlatform/ConduitTechStackScore][Conduit Tech Stack Evaluation]]
+   * [[./developer/ConduitTestCoverage][Conduit Test Coverage]]
 ---+++ Conduit Lite
-   * [[http://twiki.corp.inmobi.com/TechPlatform/ConduitLite][Conduit Lite]]
+   * [[./developer/ConduitLite][Conduit Lite]]
 ---+++ Conduit Audit
-   * [[https://twiki.corp.inmobi.com/TechPlatform/AuditFeature][Audit Feature]]
+   * [[./developer/AuditFeature][Audit Feature]]
 ---+++ Conduit Visualization
-   * [[https://twiki.corp.inmobi.com/TechPlatform/ConduitVisualization][Conduit Visualization]]
+   * [[./developer/ConduitVisualization][Conduit Visualization]]
 ---+++ Conduit Admin Script
 
-   * [[https://twiki.corp.inmobi.com/TechPlatform/ConduitAdminScript][Admin Script]]
+   * [[./developer/ConduitAdminScript][Admin Script]]
 ---+++ Conduit FAQ
 
-   1 Issues faced/solutions during integration can be found [[ConduitFAQ][here]]
+   1. Issues faced/solutions during integration can be found [[./developer/ConduitFAQ][here]]
 <span style="color: #0000ff;"><span style="text-decoration: underline;"> </span></span>
-
--- Main.SharadAgarwal - 2011-11-22
-
-%COMMENT%
-
-   * [[%ATTACHURL%/Conduit_v1.pptx][Conduit_v1.pptx]]: Conduit Architecture
 

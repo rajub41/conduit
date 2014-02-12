@@ -1,8 +1,8 @@
-%BREADCRUMBS{ format="$name" separator=" » "}%
+
 ---+++ What is Conduit used for
 
    * High throughput, distributed streaming event collection at scale conforming to latencies by conduit. Read the DISCLAIMER below for you need to be extra vigilant using Conduit
-DISCLAIMER:
+*DISCLAIMER:*
    * In extremely rare scenarios (listed below), there can be message replay/loss.
    * Conduit does not gaurantee *strict* exactly-once and inorder mesasage arrival semantics.
 
