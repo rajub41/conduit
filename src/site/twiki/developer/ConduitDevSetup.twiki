@@ -1,5 +1,5 @@
 
----+!! Dev setup installation
+---+ Dev setup installation
 
 ---+++ Hadoop Setup
 
@@ -28,7 +28,7 @@ NameNode can be started using "<strong><em>sudo service hadoop-0.20-namenode sta
 DataNodes can be started using "<em><strong>sudo service hadoop-0.20-datanode start</strong></em>" and services for other 2 are hadoop-0.20-datanode2 and hadoop-0.20-datanode3
 ---+++ Scribe setup
 
-Scribe is setup using apt inmobi repository apt-get install scribe-service-hdfs-orig package. This installs the scribe binary in location /usr/bin.
+Scribe is setup using apt repository apt-get install scribe-service-hdfs-orig package. This installs the scribe binary in location /usr/bin.
 
 1. We have a wrapper script which sets the hadoop library class path present in /usr/bin/scribe.sh which should be run in background
 

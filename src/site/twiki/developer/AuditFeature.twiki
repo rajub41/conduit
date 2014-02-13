@@ -69,12 +69,12 @@ Here is an example query to get audit stats and the expected output when there i
 
 Warning: JAVA_HOME not set!
 Displaying results for AuditDbQuery [fromTime=24-04 08:44, toTime=24-04 09:04, cutoffTime=1, groupBy=GroupBy[HOSTNAME, TOPIC, TIER], 
-filter=Filter{TOPIC=benchmark_merge}, timeout=120000, rootdir=hdfs://conduitdev1.mkhoj.com:9000/conduit]
+filter=Filter{TOPIC=benchmark_merge}, timeout=120000, rootdir=hdfs://localhost:9000/conduit]
 
-[{"HOSTNAME":"conduitdev1.mkhoj.com","TOPIC":benchmark_merge,"Received":60000,"CLUSTER":"conduitdev1","TIER":"publisher",
-"Latencies":{"99.0":1}},{"HOSTNAME":"conduitdev1.mkhoj.com","TOPIC":benchmark_merge,"Received":60000,"CLUSTER":"conduitdev1",
-"TIER":"AGENT","Latencies":{"99.0":1},{"HOSTNAME":"conduitdev1.mkhoj.com","TOPIC":benchmark_merge,"Received":60000,
-"CLUSTER":"conduitdev1","TIER":"collector","Latencies":{"99.0":1}},{"HOSTNAME":"conduitdev1.mkhoj.com","TOPIC":benchmark_merge,
+[{"HOSTNAME":"localhost","TOPIC":benchmark_merge,"Received":60000,"CLUSTER":"conduitdev1","TIER":"publisher",
+"Latencies":{"99.0":1}},{"HOSTNAME":"localhost","TOPIC":benchmark_merge,"Received":60000,"CLUSTER":"conduitdev1",
+"TIER":"AGENT","Latencies":{"99.0":1},{"HOSTNAME":"localhost","TOPIC":benchmark_merge,"Received":60000,
+"CLUSTER":"conduitdev1","TIER":"collector","Latencies":{"99.0":1}},{"HOSTNAME":"localhost","TOPIC":benchmark_merge,
 "Received":60000,"CLUSTER":"conduitdev1","TIER":"hdfs","Latencies":{"99.0":2}}]
 
 </verbatim>
