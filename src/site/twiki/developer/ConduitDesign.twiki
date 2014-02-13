@@ -36,9 +36,9 @@ Data Transport between Producers and Consumers.
 <img width="620" alt="Conduit_pict1.jpg" src="./../images/Conduit_pict1.jpg" title="Conduit_pict1.jpg" height="400" />
 ---+++ Technology Evaluation
 
-FLUME, KAFKA and Scribe have been evaluated. Details - [[./../images/DataTransportTechnology][DataTransportTechnology.pptx]]
+FLUME, KAFKA and Scribe have been evaluated. Details - <a href= "../DataTransportTechnology.pptx">here</a>
 
-Details on Scribe setup/scenarios/usecases - https://twiki.corp.inmobi.com/TechPlatform/ScribeArch
+Details on Scribe setup/scenarios/usecases - [[ScribeArch][ScribeArch]]
 ---+++ Design
 
 Scribe Agents on each producer node. Producer application log messages using API which will write to the local scribe agent. Local scribe agent forward message to Scribe collectors. Scribe collectors writes to HDFS. Consumers pull data directly from HDFS.

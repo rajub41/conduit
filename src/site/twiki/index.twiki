@@ -5,9 +5,6 @@
 ---+++ Conduit Design
    * [[./developer/ConduitDesign][Conduit Design]]
 
----+++ Spec
-   * [[./developer/ConduitSpec][Specs for producer and consumer]]
-
 ---+++ Installing Conduit
    * [[./developer/InstallingConduit][Installing Conduit]]
    * [[./developer/ConduitDevSetup][Conduit dev setup]]
