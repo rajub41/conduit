@@ -4,6 +4,7 @@ CONDUIT_ORDERLY_CREATION_FILES_CLASS="com.inmobi.conduit.utils.OrderlyCreationOf
 CONDUIT_MERGE_STREAM_VALIDATION_CLASS="com.inmobi.conduit.utils.MergeStreamDataConsistency"
 CONDUIT_LOCAL_STREAM_VALIDATION_CLASS="com.inmobi.conduit.utils.LocalStreamDataConsistency"
 CONDUIT_VALIDATION_CLASS="com.inmobi.conduit.validator.ConduitValidator"
+CONDUIT_TEST_MSG_CLASS="com.inmobi.conduit.utils.TestMsgSizeOfAllStreams"
 #functions
 info() {
   local msg=$1
@@ -37,6 +38,7 @@ USAGE: $0 mirrorstreamdataconsistency <mergedstreamroot-dir> <mirrorstreamroot-d
        $0 admin -verify [-stream (comma separated stream names)] [-mode (comma separated stream modes: {local,merge,mirror})] [-cluster (comma separated cluster names)] <-start (YYYY/MM/DD/HH/mm) | -relstart (minutes from now)> <-stop (YYYY/MM/DD/HH/mm) | -relstop (minutes from now)> [-numThreads (number of threads for parallel listing)] <-conf (conduit.xml file path)>
        $0 admin -fix <-stream (stream name)> <-mode (stream mode: {local,merge,mirror})> <-cluster (cluster name)> <-start (YYYY/MM/DD/HH/mm)> <-stop (YYYY/MM/DD/HH/mm)> [-numThreads (number of threads for parallel listing)] <-conf (conduit.xml file path)> [NOTE: THIS NEEDS SHUTDOWN OF TARGET CONDUIT WORKERS]
        $0 admin -checkpoint <-stream (stream name)> <-destCluster (destination cluster)> [-srcCluster (source cluster) ] <-date (YYYY/MM/DD/HH/mm)> <-conf (conduit.xml file path)> 
+       $0 msgSize [filePath]
 EOF
 }
 
@@ -88,6 +90,9 @@ case "$mode" in
     ;;
   admin)
     opt_admin=1;
+    ;;
+  msgSize)
+    opt_msg=1;
     ;;
   *)
     error "Unknown or unspecified command '$mode'"
@@ -157,6 +162,8 @@ elif [ -n "$opt_local" ] ; then
   run_conduit $CONDUIT_LOCAL_STREAM_VALIDATION_CLASS $args
 elif [ -n "$opt_admin" ] ; then
   run_conduit $CONDUIT_VALIDATION_CLASS $args
+elif [ -n "$opt_msg"] ; then
+  run_conduit $CONDUIT_TEST_MSG_CLASS $args
 #  echo $args
 else
   error "This message should never appear" 1
