@@ -25,7 +25,7 @@ public class TestMsgSizeOfAllStreams {
      return;
     }
     for (FileStatus streamSt : streams) {
-      System.out.println("========================= Stream Name ===============  " + streamSt.getPath().getName());
+      System.out.println(" Stream Name   ===========================   msgLength ");
       FileStatus[] collectorStatuses = fs.listStatus(streamSt.getPath());
       if (collectorStatuses == null) {
         System.out.println("NNNNNNNNNooooo collectors in " + streamSt.getPath());
@@ -52,7 +52,7 @@ public class TestMsgSizeOfAllStreams {
              breader = new BufferedReader(new InputStreamReader(fin));
              String msg = breader.readLine();
              if (msg != null) {
-               System.out.println("SSSSSSSSSSSSSSSSS file " + file.getPath() + "  msg size " + msg.length());
+               System.out.println(file.getPath().getParent().getParent().getName() + "                       "+  msg.length());
              }
            } catch (Exception e) {
              // TODO Auto-generated catch block

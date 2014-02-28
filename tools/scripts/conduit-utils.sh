@@ -162,7 +162,7 @@ elif [ -n "$opt_local" ] ; then
   run_conduit $CONDUIT_LOCAL_STREAM_VALIDATION_CLASS $args
 elif [ -n "$opt_admin" ] ; then
   run_conduit $CONDUIT_VALIDATION_CLASS $args
-elif [ -n "$opt_msg"] ; then
+elif [ -n "$opt_msg" ] ; then
   run_conduit $CONDUIT_TEST_MSG_CLASS $args
 #  echo $args
 else
