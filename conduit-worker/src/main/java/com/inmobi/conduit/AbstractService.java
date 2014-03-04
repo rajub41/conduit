@@ -308,19 +308,27 @@ public abstract class AbstractService implements Service, Runnable {
       if (isMissingPaths(commitTime, prevRuntime)) {
         LOG.debug("Previous Runtime: [" + getLogDateString(prevRuntime) + "]");
         while (isMissingPaths(commitTime, prevRuntime)) {
-          String missingPath = Cluster.getDestDir(destDir, categoryName,
-              prevRuntime);
-          Path missingDir = new Path(missingPath);
-          if (!fs.exists(missingDir)) {
-            LOG.debug("Creating Missing Directory [" + missingDir + "]");
-            fs.mkdirs(missingDir);
-            ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
-                categoryName, 1);
-          }
+          createMissingDir(fs, destDir, categoryName, prevRuntime);
           prevRuntime += MILLISECONDS_IN_MINUTE;
         }
       }
-      prevRuntimeForCategory.put(categoryName, commitTime);
+    } else {
+      prevRuntime = commitTime;
+      createMissingDir(fs, destDir, categoryName, prevRuntime);
+    }
+    prevRuntimeForCategory.put(categoryName, commitTime);
+  }
+
+  private void createMissingDir(FileSystem fs, String destDir,
+      String categoryName, Long prevRuntime) throws IOException {
+    String missingPath = Cluster.getDestDir(destDir, categoryName,
+        prevRuntime);
+    Path missingDir = new Path(missingPath);
+    if (!fs.exists(missingDir)) {
+      LOG.debug("Creating Missing Directory [" + missingDir + "]");
+      fs.mkdirs(missingDir);
+      ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
+          categoryName, 1);
     }
   }
 
