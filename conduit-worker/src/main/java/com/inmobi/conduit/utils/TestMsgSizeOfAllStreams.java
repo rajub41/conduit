@@ -15,60 +15,34 @@ public class TestMsgSizeOfAllStreams {
   public void testMsgSizes(String hdfsUri) throws IOException {
     Path hdfsUrl = new Path(hdfsUri);
     FileSystem fs = hdfsUrl.getFileSystem(new Configuration());
-    Path dataDir = new Path(hdfsUrl, "databus/data");
-    FileStatus[] streams = fs.listStatus(dataDir);
-    if (streams != null) {
-   System.out.println("NNNNNNNNNNNNNNNNumber of streams " + streams.length);
-   
+    Path dataDir = new Path(hdfsUrl, "databus/system/checkpoint");
+    FileStatus[] checkpointFiles = fs.listStatus(dataDir);
+    if (checkpointFiles != null) {
+      System.out.println("Number of checkpoints " + checkpointFiles.length); 
     } else {
-      System.out.println("NNNNNNNNNNNNNNNNNNO streams ");
+      System.out.println("No checkpoints in checkpoint dir ");
      return;
     }
-    for (FileStatus streamSt : streams) {
-      System.out.println(" Stream Name   ===========================   msgLength ");
-      FileStatus[] collectorStatuses = fs.listStatus(streamSt.getPath());
-      if (collectorStatuses == null) {
-        System.out.println("NNNNNNNNNooooo collectors in " + streamSt.getPath());
-        break;
-      }
-      for (FileStatus collectorSt : collectorStatuses) {
-        
-        FileStatus[] files = fs.listStatus(collectorSt.getPath());
-         if (files == null) {
-           System.out.println("No files in that collector " + collectorSt.getPath());
-           break;
-         }
-         
-         // for each file
-         for (FileStatus file: files) {
-           if (file.getLen() == 0) {
-             System.out.println("reading from other file as this file " + file.getPath() +" is empty");
-             continue;
-           }
-           FSDataInputStream fin = null;
-           BufferedReader breader = null;
-           try {
-             fin = fs.open(file.getPath());
-             breader = new BufferedReader(new InputStreamReader(fin));
-             String msg = breader.readLine();
-             if (msg != null) {
-               System.out.println(file.getPath().getParent().getParent().getName() + "                       "+  msg.length());
-             }
-           } catch (Exception e) {
-             // TODO Auto-generated catch block
-             e.printStackTrace();
-           } finally {
-              if (fin != null) {
-                fin.close();
-              }
-              if (breader != null) {
-               breader.close(); 
-              }
-           }
-           break;
-         }
-         
-         break;
+    for (FileStatus chkFile : checkpointFiles) {
+      System.out.println(" Checkpoint file " + chkFile.getPath());
+      FSDataInputStream fin = null;
+      BufferedReader breader = null;
+      try {
+        fin = fs.open(chkFile.getPath());
+        breader = new BufferedReader(new InputStreamReader(fin));
+        String msg = breader.readLine();
+        if (msg != null) {
+          System.out.println(" Service " + chkFile.getPath().getName() + " checkpoint is " + msg);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      } finally {
+        if (fin != null) {
+          fin.close();
+        }
+        if (breader != null) {
+          breader.close(); 
+        }
       }
     }
   }
