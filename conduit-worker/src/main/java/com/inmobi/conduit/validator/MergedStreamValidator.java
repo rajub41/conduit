@@ -65,6 +65,8 @@ public class MergedStreamValidator extends AbstractStreamValidator {
     Map<String, FileStatus> mergeStreamFileListing = new TreeMap<String, FileStatus>();
     Path mergePath = new Path(mergeCluster.getFinalDestDirRoot(), streamName);
     FileSystem mergedFs = FileSystem.get(mergeCluster.getHadoopConf());
+    Path mergeStartPath = new Path(mergePath,
+        Cluster.getDateAsYYYYMMDDHHMNPath(startTime));
     ParallelRecursiveListing mergeParallelListing =
         new ParallelRecursiveListing(numThreads, null, null);
     List<FileStatus> mergeStreamFileStatuses = 
