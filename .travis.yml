@@ -13,4 +13,4 @@ branches:
 before_install:
  - sudo apt-get update -qq
 
-script: "mvn clean install "
+script: "mvn clean package"
