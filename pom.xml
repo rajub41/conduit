@@ -356,9 +356,9 @@
   </reporting>
 
   <scm>
-    <connection>scm:git:https://github.com/InMobi/conduit.git</connection>
-    <url>https://github.com/InMobi/conduit</url>
-    <developerConnection>scm:git:https://github.com/InMobi/conduit.git</developerConnection>
+    <connection>scm:git:https://github.com/rajubairishetti/conduit.git</connection>
+    <url>https://github.com/rajubairishetti/conduit</url>
+    <developerConnection>scm:git:https://github.com/rajubairishetti/conduit.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -422,7 +422,7 @@
         <updatePolicy>never</updatePolicy>
       </snapshots>
     </repository>
-<!--
+
     <repository>
       <id>inmobi-external-thirdparty</id>
       <url>https://raw.github.com/InMobi/mvn-repo/master/thirdparty</url>
@@ -434,7 +434,7 @@
         <enabled>false</enabled>
         <updatePolicy>never</updatePolicy>
       </snapshots>
-    </repository>-->
+    </repository>
   </repositories>
 
 </project>
