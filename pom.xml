@@ -422,6 +422,7 @@
         <updatePolicy>never</updatePolicy>
       </snapshots>
     </repository>
+<!--
     <repository>
       <id>inmobi-external-thirdparty</id>
       <url>https://raw.github.com/InMobi/mvn-repo/master/thirdparty</url>
@@ -433,7 +434,7 @@
         <enabled>false</enabled>
         <updatePolicy>never</updatePolicy>
       </snapshots>
-    </repository>
+    </repository>-->
   </repositories>
 
 </project>
