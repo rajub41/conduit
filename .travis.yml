@@ -8,9 +8,10 @@ branches:
     - develop
     - /^release-.*$/
     - /^hotfix-.*$/
+    - test-travis
 
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install protobuf-compiler
 
-script: "mvn clean install && mvn site site:stage"
+script: "mvn clean install "
