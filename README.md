@@ -1,6 +1,6 @@
 # Conduit
 
-[![Build Status](https://travis-ci.org/InMobi/conduit.png?branch=master)](https://travis-ci.org/InMobi/conduit)
+[![Build Status](https://travis-ci.org/rajubairishetti/conduit.png?branch=test-travis)](https://travis-ci.org/rajubairishetti/conduit)
 
   Yet another streaming data transport system
 
