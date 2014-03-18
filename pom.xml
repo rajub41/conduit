@@ -386,7 +386,7 @@
 
   <ciManagement>
     <system>Travis</system>
-    <url>https://travis-ci.org/InMobi/conduit</url>
+    <url>https://travis-ci.org/rajubairishetti/conduit</url>
   </ciManagement>
 
   <licenses>
