@@ -82,7 +82,7 @@ public class MirrorStreamValidator extends AbstractStreamValidator {
     }
 
     // perform parallel recursive listing of paths in destination cluster
-    Path mirrorPath = new Path(mirrorCluster.getFinalDestDirRoot(), streamName);
+    Path mirrorPath = new Path(mirrorCluster.getReadFinalDestDirRoot(), streamName);
     FileSystem mirrorFs = FileSystem.get(mirrorCluster.getHadoopConf());
     startPath = getstartPath(mirrorPath);
     endPath = getEndPath(mirrorPath);
