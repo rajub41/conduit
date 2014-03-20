@@ -34,6 +34,7 @@ public class TestDataServiceManager {
         "./src/test/resources/audit-feeder.properties");
     assert serviceManager.getConduitConfig().size() == 2;
     String response = serviceManager.getStreamAndClusterList();
+    System.out.println("RRRRRRRRRRRRRRRResponse " + response);
     List<String> streamList = TestUtil.getStreamsListFromResponse(response);
     List<String> clusterList = TestUtil.getClustersListFromResponse(response);
     assert streamList.size() == 5;

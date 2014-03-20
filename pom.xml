@@ -375,7 +375,7 @@
     <repository>
       <id>InMobiRepository</id>
       <name>InMobi Repository</name>
-      <url>https://github.com/InMobi/mvn-repo/raw/master/releases</url>
+      <url>https://github.com/rajubairishetti/mvn-repo/raw/master/releases</url>
     </repository>
   </distributionManagement>
 
