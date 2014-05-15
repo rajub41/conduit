@@ -1,4 +1,4 @@
-# Conduit
+#Conduit
 
 [![Build Status](https://travis-ci.org/InMobi/conduit.png?branch=master)](https://travis-ci.org/InMobi/conduit)
 
