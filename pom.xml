@@ -24,6 +24,8 @@
     <messaging-client-version>4.0.3</messaging-client-version>
   </properties>
 
+  <inceptionYear>2012</inceptionYear>
+
   <profiles>
     <!-- added for cdh4 update -->
     <profile>
