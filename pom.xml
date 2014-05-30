@@ -278,7 +278,7 @@
         <artifactId>maven-release-plugin</artifactId>
         <version>2.2</version>
       </plugin>
-<plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <version>3.2</version>
@@ -289,8 +289,16 @@
             <version>1.5<!-- doxia version appropriate to the site plugin version --></version>
           </dependency>
         </dependencies>
-      </plugin>   
- </plugins>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>1.6</version>
+        <configuration>
+        <licenseName>apache_v2</licenseName>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
   <reporting>
