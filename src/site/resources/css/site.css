@@ -27,13 +27,18 @@ color: DarkBlue;
 font-size: small;
 }
 
+td {
+background-color: "#00FF00";
+vertical-align: top;
+}
+
 th {
 background-color: #bbb;
 color: #369;
 }
 
 body {
-font-size: medium;
+font-size: small;
 border: 1px solid #FFFFFF;
 background-color: ##FFFFFF;
 margin-top: 7px;

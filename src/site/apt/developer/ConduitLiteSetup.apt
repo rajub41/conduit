@@ -4,8 +4,7 @@
  -----
  -----
 
- %TOC%
-
+ %{toc}
 
 SetUp
 
@@ -32,23 +31,15 @@ SetUp
 
 +------+
 
-
 *Pintail Setup
-
 
  Install pintail package and add hadoop core\-site.xml to the classpath of m\-client for the benchmarks to run.
 
-
-
 *Zookeeper Setup
-
 
  <a href="./ConduitDevSetup.html#Zookeeper_setup">setup</a>.
 
-
-
 *Conduit Setup
-
 
  <a href="./ConduitDevSetup.html#Conduit_setup">here</a>.
 

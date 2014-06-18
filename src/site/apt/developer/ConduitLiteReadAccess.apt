@@ -4,14 +4,11 @@
  -----
  -----
 
+%{toc}
+
 Give Acces to Users
 
-
-
 * Give read\-only acces to users
-
-
- 
 
  [[1]] Using IAM service of AWS create IAM user.
 
@@ -22,9 +19,6 @@ Give Acces to Users
  [[1]] Policy created (for group/user) should be like this
 
  []
-
-
-
 
 +------+
 
@@ -48,18 +42,11 @@ Give Acces to Users
 
 +------+
 
-
 **Give Read\-Write Access to Users
-
-
- 
 
  [[1]] If you want to give full access to users for only a few buckets; follow the same steps aas above but the policy generated should be like
 
  []
-
-
-
 
 +------+
 
