@@ -81,11 +81,7 @@ Overview
 
 **DataLoss Scenarios
 
-
-
 ***Probability of the following scenarios is extremely low however for completness we are enlisting all scenarios below where it can happen
-
-
  
 *----*--*--*
 |Scenario||How to capture||Extent of Data Loss|
@@ -109,12 +105,7 @@ a particular file and they haven't flushed all to disk|HDFS monitoring|Atmost 1 
 Data is spooled at agent/collector and before it gets despooled the hard-disk of the box goes bad|monitoring disk for bad sectors/other issues|Dataloss is equal to the amount of data spooled|
 *----*--*--*
 
-
-
-
 ***Probability of the following scenarios is extremely low however for completness we are enlisting all scenarios below where it can happen
-
-
  
 *----*--*
 |Scenario||Extent of data replay|
@@ -123,8 +114,4 @@ HDFS write() doesn't throw exception, but sync() fails|to avoid dataloss we will
 <p>If in a run we publish certain set of files and fail before committing the transaction, the same set can be replayed again</p> <p>in the next run to avoid data-loss. In most cases the number of files would be equal to number of collectors in LocalStream, number of collectors multiplied</p> <p>by number of clusters in mergedstream and mirror stream. However if we are processing a backlog and publish a large number of files and fail to commit</p> <p></p>*----*--*
 Conduit worker failures due to HDFS errors|the transaction due to HDFS unavalibity then the number could be higher.|
 *----*--*
-||
-*----*--*
-
-
 
