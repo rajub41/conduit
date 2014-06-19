@@ -3,7 +3,6 @@
  -----
  -----
  -----
-
 %{toc}
 
 Overview
@@ -43,10 +42,10 @@ Overview
  In order to use S3NativeCopyMapper within conduit lite configure the cluster in the conduit.xml to use copy mapper implemenation as following:
 
 +------+
-  \<cluster name\="" hdfsurl\="s3n:///"
-   jturl\=""
-   jobqueuename\=""
-   copyMapperClass \= "com.inmobi.conduit.local.S3NCopyMapper"/\>
+  <cluster name="" hdfsurl="s3n:///"
+   jturl=""
+   jobqueuename=""
+   copyMapperClass = "com.inmobi.conduit.local.S3NCopyMapper"/>
 
 +------+
  Please note that the S3NativeCopyMapper works with S3N filesystem.
@@ -60,7 +59,6 @@ Overview
  Run benchmarks
 
  \=\=\=\=\=\=\=\=\=\=\=\= Mean Latency \=\=\=\=\=\=\=\=\=\=\=\=
-
  
  [[1]] Collector Benchmark   44900 ms
  
@@ -82,13 +80,11 @@ Overview
  
    [[1]] This test does not cover <<percentile latency>>. However it should be possible to find percentile latency by using conduit audit feature exposed through audit dashboard. Please refer to {{{./ConduitVisualization.html}Conduit visualization}} for more details.
 
-
 **Throughput
 
  A) Refer to <<producer/agent/collector throughput>><a href="../ConduitLitePerfromanceOnAWS.pdf"> results </a>.
 
  Notes:
-
  
  [[1]] This test finds the maximum acceptable write throughput of producer/agent/collector that ensures steady state, i.e. no message loss at producer, or no spooling at agent/collector.
  
@@ -97,7 +93,7 @@ Overview
 
 *Capacity planning
 
- <a href="ConduitLite.html#Throughput">throughput</a> section above. The aim is to have a conduit\-lite setup where the system is running in <<steady state>>, i.e. there is no message loss/spooling happening at either of publisher, agent or collector tiers.
+ {{{ConduitLite.html#Throughput}throughput}} section above. The aim is to have a conduit\-lite setup where the system is running in <<steady state>>, i.e. there is no message loss/spooling happening at either of publisher, agent or collector tiers.
 
  
  [[1]] In order to write total of 'N' MB/s through conduit\-lite layer, <<minimum collector nodes needed \= N/(max collector write throughput)>>. If more than 1 collector is needed, then you would need to configure a VIP layer between scribe agents and collectors.

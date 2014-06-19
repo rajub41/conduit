@@ -34,7 +34,7 @@ Dev setup installation
 
  <em><strong>sudo service hadoop-0.20-datanode start</strong></em>" and services for other 2 are hadoop\-0.20\-datanode2 and hadoop\-0.20\-datanode3
 
-**Scribe setup
+*Scribe setup
 
  Install scribe\-service\-hdfs\-orig package. This installs the scribe binary in location /usr/bin.
 
@@ -48,7 +48,7 @@ Dev setup installation
 
  NOTE : PLEASE START SCRIBE AS "conduit" USER
 
-**Zookeeper setup
+*Zookeeper setup
 
  Zookeeper is setup using the Cloudera {{{https://ccp.cloudera.com/display/CDHDOC/ZooKeeper\+Installation}Document}}. No changes are made from default configuration.
 
@@ -56,7 +56,7 @@ Dev setup installation
 
  Stop "sudo service hadoop\-zookeeper\-server stop"
 
-**Conduit setup
+*Conduit setup
 
  Conduit is setup using the generated deb package using dpkg command. Use the default configuration files present in /etc/conduit/conf to /usr/local/conduit/conf. All the configurations are attached here. Edit for any changes. Remove Symlink /usr/local/conduit and symlink to new /usr/local/conduit\-newversion. Starting conduit using the following command
 
@@ -72,9 +72,9 @@ Dev setup installation
 
  NOTE : PLEASE START CONDUIT AS "conduit" USER
 
-**Exception Cron Job
+*Exception Cron Job
 
- <a href="../sendmail.py"> here </a>
+ Click {{{../sendmail.py} here}} for the mailing script
 
  1. greps for any exception in logs if found gets the stacktrace from next few statements, caches all the necessary lines
 
@@ -82,25 +82,35 @@ Dev setup installation
 
  3. constructs email using email library in python and adds the caches lines and attaches conduit.log to the email to user@
 
-**Changing open file handle count
+*Changing open file handle count
 
  To change the open file handle count to 10240, do the following
 
  
  [[I]] Add the following in /etc/security/limits.conf :
-  [[a]] hdfs hard nofile 10240
-  [[a]] hadoop hard nofile 10240
-  [[a]] mapred hard nofile 10240
-  [[a]] hadoop soft nofile 10240
-  [[a]] hdfs soft nofile 10240
-  [[a]] mapred soft nofile 10240
+  
+   [[a]] hdfs hard nofile 10240
+  
+   [[a]] hadoop hard nofile 10240
+  
+   [[a]] mapred hard nofile 10240
+  
+   [[a]] hadoop soft nofile 10240
+  
+   [[a]] hdfs soft nofile 10240
+  
+   [[a]] mapred soft nofile 10240
 
  [[I]] Add the following to /etc/pam.d/common\-session :
-  [[a]] session required pam_limits.so
+  
+   [[a]] session required pam_limits.so
 
  [[I]] Logout and login back for the changes to get reflected.
+ 
  [[I]] Restart the daemons for the change to effect on them
+ 
  [[I]] Verify the limits by looking /proc/\<pid\>/limits
+ 
  []
 
 

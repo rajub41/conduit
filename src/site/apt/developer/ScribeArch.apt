@@ -85,8 +85,9 @@ minute based file rotation can generate empty file|We are ok with this as we'll 
 
 *UseCases
 
-
-*----+------+------+------+------+
+----+------+------+------+------+
+|| UseCase || Behaviour/Observations || Monitoring to catch || Opens || How to try|
+----+------+------+------+------+
 | <<1.>> Buffer Store - Primary Store being File Store and secondary also being File Store | <<1>>. primary is at /data/scribetestdata/ and secondary is at /tmp/scribetestdata and category name is "test" \ | scribe server log monitoring for exception's | When does write to secondary store start. What config controls it? | Use scribe conf from https://twiki.corp.inmobi.com/pub/DataPlatform/Scribe/example1.conf |
 |  | <<2.>> primary store is not reachable( permission issue/disk is full) and client is sending new messages. \ |  |  |  |
 |  | <<3.>> scribe server tries writing to primary fails and retries. \ |  |  |  |

@@ -10,38 +10,47 @@ Design
 
  Data Transport between Producers and Consumers.
 
-*Current Data Transport Problems
+Current Data Transport Problems
 
- 
- * Adhoc log aggregation
- * Duplicate data transfer
- * Tightly coupled \- brittle
- * No Reliability Guarantees
- * Network glitches lead to huge backlog
- * High peak bandwidth requirement
- * No support or different data paths for near real\-time use
- []
+  * Adhoc log aggregation
 
-*Goals
+  * Duplicate data transfer
 
- 
- * Capability to transport event data between distributed sub\-systems in reliable, efficient, scalable and uniform way for batch as well as near real\-time consumption.
- * Decouple data consumers from producers
- * Savings on Network Bandwidth
-  * Reduce peak network requirements due to bulk data transfers in spurts.
-  * Minimize Duplicate data transfers across WAN
+  * Tightly coupled - brittle
 
+  * No Reliability Guarantees
+
+  * Network glitches lead to huge backlog
+
+  * High peak bandwidth requirement
+
+  * No support or different data paths for near real-time use
+
+Goals
+
+  * Capability to transport event data between distributed sub-systems in reliable, efficient, scalable and uniform way for batch as well as near real-time consumption.
+
+  * Decouple data consumers from producers
+
+  * Savings on Network Bandwidth
+
+    * Reduce peak network requirements due to bulk data transfers in spurts.
+
+    * Minimize Duplicate data transfers across WAN
 
 *What Conduit is NOT ?
  
  * Filtering/transformation layer
-  * Data is delivered in raw format as being produced
+  
+   * Data is delivered in raw format as being produced
 
  * Data Store
-  * Consumers are expected to consume the data within certain SLA, after which ALL data is purged
+  
+   * Consumers are expected to consume the data within certain SLA, after which ALL data is purged
 
  * Batching semantics
-  * Consumer decide their own batching semantics &ndash;Same data stream can be used by multiple consumers with different needs
+  
+   * Consumer decide their own batching semantics &ndash;Same data stream can be used by multiple consumers with different needs
 
 *Technology Evaluation
 
