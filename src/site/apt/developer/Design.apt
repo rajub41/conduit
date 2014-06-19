@@ -10,7 +10,7 @@ Design
 
  Data Transport between Producers and Consumers.
 
-Current Data Transport Problems
+*Current Data Transport Problems
 
   * Adhoc log aggregation
 
@@ -26,7 +26,7 @@ Current Data Transport Problems
 
   * No support or different data paths for near real-time use
 
-Goals
+*Goals
 
   * Capability to transport event data between distributed sub-systems in reliable, efficient, scalable and uniform way for batch as well as near real-time consumption.
 

@@ -3,6 +3,7 @@
  -----
  -----
  -----
+
 %{toc}
 
 Overview
@@ -15,9 +16,10 @@ Overview
 
  [[1]] Configure an instance of scribe agent to run locally on the same box as the message publisher. The publisher writes messages to the local scribe agent, thus providing high write throughput and isolation from any downstream failure. Scribe agent should be configured to write to scribe collector(s). The agent is capable of handling various downstream failure scenarios and ensure that there is no data\-loss by spooling data to its local disk and periodically de\-spooling.
  
- [[1]] <a herf="./ConduitLite.html#Setup_on_S3_S3N">setup</a> below.
+ [[1]] {{{Setup_on_S3_S3N}setup}} below.
  
  [[1]] Conduit typically supports message sizes of \~2\-3K. However it has been successfully used to send messages upto 10K size as well.
+ 
  []
 
 
@@ -93,7 +95,7 @@ Overview
 
 *Capacity planning
 
- {{{ConduitLite.html#Throughput}throughput}} section above. The aim is to have a conduit\-lite setup where the system is running in <<steady state>>, i.e. there is no message loss/spooling happening at either of publisher, agent or collector tiers.
+ {{{Throughput}Throughput}} section above. The aim is to have a conduit\-lite setup where the system is running in <<steady state>>, i.e. there is no message loss/spooling happening at either of publisher, agent or collector tiers.
 
  
  [[1]] In order to write total of 'N' MB/s through conduit\-lite layer, <<minimum collector nodes needed \= N/(max collector write throughput)>>. If more than 1 collector is needed, then you would need to configure a VIP layer between scribe agents and collectors.

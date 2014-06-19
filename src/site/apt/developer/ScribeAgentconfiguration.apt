@@ -10,33 +10,31 @@ Scribe Agent Configuration
 
 +------+
 
-\<store\>
-   category\=_audit
-   type\=buffer
-   tier\=agent
-   window_size\=60
-   target_write_size\=20480
-   max_write_interval\=60
-   buffer_send_rate\=1
-   retry_interval\=30
-   retry_interval_range\=10
-   must_succeed\=yes
-   replay_buffer\=yes
-   \<primary\>
-      type\=network
-      remote_host\=10.14.118.98
-      remote_port\=12000
-   \</primary\>
-   \<secondary\>
-      type\=file
-      fs_type\=std
-      file_path\=\<spooling directory of scribe agent\>/_audit
-      base_filename\=_audit
-      max_size\=100000000
-   \</secondary\>
-\</store\>
-
-
+	<store>
+	   category=_audit
+	   type=buffer
+	   tier=agent
+	   window_size=60
+	   target_write_size=20480
+	   max_write_interval=60
+	   buffer_send_rate=1
+	   retry_interval=30
+	   retry_interval_range=10
+	   must_succeed=yes
+	   replay_buffer=yes
+	   <primary>
+	      type=network
+	      remote_host=10.14.118.98
+	      remote_port=12000
+	   </primary>
+	   <secondary>
+	      type=file
+	      fs_type=std
+	      file_path=<spooling directory of scribe agent>/_audit
+	      base_filename=_audit
+	      max_size=100000000
+	   </secondary>
+	</store>
 
 +------+
 

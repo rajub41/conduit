@@ -3,6 +3,7 @@
  -----
  -----
  ----- 
+ 
 %{toc}
 
 GOAL's for Phase1
@@ -146,7 +147,7 @@ libevent|1.4-2|
 libhdfs||
 *----+--+
 
- [[1]] <em><strong>cannot import scribe</strong></em>". Either follow the steps at {{{https://github.com/facebook/scribe}https://github.com/facebook/scribe}} to set PYTHONPATH or you can do \[2\]
+ [[1]] <<cannot import scribe>>". Either follow the steps at {{{https://github.com/facebook/scribe}https://github.com/facebook/scribe}} to set PYTHONPATH or you can do \[2\]
 
  [[1]] Checkout fb303, thrift, scribe PYTHON modules from {{{http://svn.mkhoj.com/svn/dw/flash/flashmon/trunk/scribe_collect_mon/}http://svn.mkhoj.com/svn/dw/flash/flashmon/trunk/scribe_collect_mon/}} and add the following code to scribe_cat
 

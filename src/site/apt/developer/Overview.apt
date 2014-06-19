@@ -4,14 +4,15 @@
  -----
  -----
 
+%{toc}
+
 Overview
 
 *What is Conduit used for
 
  * High throughput, distributed streaming event collection at scale conforming to latencies by conduit. Read the DISCLAIMER below for you need to be extra vigilant using Conduit
 
- []
-<<DISCLAIMER:>>
+ <<DISCLAIMER:>>
 
  * In extremely rare scenarios (listed below), there can be message replay/loss.
 
@@ -99,7 +100,7 @@ Overview
 *------------------------------------------------------------+---------------------------------------+------------------------------------------------------------------------------------------------+
 <<Probability of the following scenarios is extremely low however for completness we are enlisting all scenarios below where it can happen>>
 
-Data Replay Scenarios
+*Data Replay Scenarios
 
 
 *---------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+

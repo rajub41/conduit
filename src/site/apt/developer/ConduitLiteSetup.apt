@@ -12,21 +12,22 @@ SetUp
 
 +------+
 
-  1. Install libhdfs
+  . Install libhdfs
      Add the following to /etc/apt/sources.list
-     deb http://archive.cloudera.com/debian lucid\-cdh3u3 contrib
-     deb\-src http://archive.cloudera.com/debian lucid\-cdh3u3 contrib
-     sudo apt\-get update 
+     deb http://archive.cloudera.com/debian lucid-cdh3u5 contrib
+     deb-src http://archive.cloudera.com/debian lucid-cdh3u5 contrib
+     sudo apt-get update 
  
-     If you are getting gpg\-error : 
-     gpg \-\-keyserver pgpkeys.mit.edu \-\-recv\-key \<key\> 
-     gpg \-a \-\-export \<key\> | sudo apt\-key add \-
-     sudo apt\-get update
-     sudo apt\-get install autotools\-dev libboost\-system\-dev libboost\-dev libboost\-filesystem\-dev libevent\-dev
- autoconf debhelper libboost\-thread1.40\-dev openjdk\-6\-jdk
-     sudo apt\-get install libhdfs0\-dev
+     If you are getting gpg-error : 
+     gpg --keyserver pgpkeys.mit.edu --recv-key <key> 
+     gpg -a --export <key> | sudo apt-key add -
+     sudo apt-get update
+     sudo apt-get install autotools-dev libboost-system-dev libboost-dev libboost-filesystem-dev libevent-dev
+         autoconf debhelper libboost-thread1.40-dev openjdk-6-jdk
+     sudo apt-get install libhdfs0-dev
   2. Install scribe server package
-  3. Add jets3t\-0.6.1.jar commons\-codec\-1.3.jar and commons\-httpclient\-3.1.jar to scribe classpath
+  3. Add jets3t-0.6.1.jar commons-codec-1.3.jar and commons-httpclient-3.1.jar to scribe classpath
+
 
 
 +------+
@@ -37,10 +38,10 @@ SetUp
 
 *Zookeeper Setup
 
- <a href="./ConduitDevSetup.html#Zookeeper_setup">setup</a>.
+ {{{./DevSetup.html#Zookeeper_setup}setup}}.
 
 *Conduit Setup
 
- <a href="./ConduitDevSetup.html#Conduit_setup">here</a>.
+ {{{./DevSetup.html#Conduit_setup}here}}.
 
 

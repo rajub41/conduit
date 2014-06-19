@@ -26,13 +26,13 @@ Dev setup installation
 
  2. Configurations are found at /etc/hadoop/conf2 and /etc/hadoop/conf3 respectively.
 
- <strong><em>sudo service hadoop-0.20-jobtracker start</em></strong>"
+ <<sudo service hadoop-0.20-jobtracker start>>"
 
- <strong><em>sudo service hadoop-0.20-tasktracker start</em></strong>"
+ <<sudo service hadoop-0.20-tasktracker start>>"
 
- <strong><em>sudo service hadoop-0.20-namenode start</em></strong>"
+ <<sudo service hadoop-0.20-namenode start>>"
 
- <em><strong>sudo service hadoop-0.20-datanode start</strong></em>" and services for other 2 are hadoop\-0.20\-datanode2 and hadoop\-0.20\-datanode3
+ <<sudo service hadoop-0.20-datanode start>>" and services for other 2 are hadoop\-0.20\-datanode2 and hadoop\-0.20\-datanode3
 
 *Scribe setup
 
@@ -74,7 +74,7 @@ Dev setup installation
 
 *Exception Cron Job
 
- Click {{{../sendmail.py} here}} for the mailing script
+ Click {{{./sendmail.py} here}} for the mailing script
 
  1. greps for any exception in logs if found gets the stacktrace from next few statements, caches all the necessary lines
 
