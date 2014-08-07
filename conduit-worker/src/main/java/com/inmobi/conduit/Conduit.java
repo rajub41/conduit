@@ -516,6 +516,14 @@ public class Conduit implements Service, ConduitConstants {
       }
       conduit.setPublisher(msgPublisher);
 
+      String metaStoreUrl = prop.getProperty(META_STORE_URL);
+      if (metaStoreUrl == null) {
+        throw new RuntimeException("metastoreUrl is not specified in the conduit.cfg");
+      }
+      String hcatalogDataBaseName = prop.getProperty(HCATALOG_DB_NAME);
+      if (hcatalogDataBaseName == null) {
+        throw new RuntimeException("hcatalogDatabseName is not specified in the conduit cfg");
+      }
       Signal.handle(new Signal("TERM"), new SignalHandler() {
 
         @Override

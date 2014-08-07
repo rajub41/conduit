@@ -45,4 +45,7 @@ public interface ConduitConstants {
       + "filesPerCollectorPerLocalStream";
   public static final String TIMEOUT_TO_PROCESS_LAST_COLLECTOR_FILE =
       "com.inmobi.conduit.timeoutToProcessLastCollectorFile";
+  public static final String META_STORE_URL = "com.inmobi.conduit.metastoreUrl";
+  public static final String HCATALOG_DB_NAME =
+      "com.inmobi.conduit.hcatalogDatabaseName";
 }
