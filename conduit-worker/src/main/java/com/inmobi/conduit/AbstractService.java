@@ -318,6 +318,7 @@ public abstract class AbstractService implements Service, Runnable {
           if (!fs.exists(missingDir)) {
             LOG.debug("Creating Missing Directory [" + missingDir + "]");
             fs.mkdirs(missingDir);
+            //add partition
             ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
                 categoryName, 1);
           }

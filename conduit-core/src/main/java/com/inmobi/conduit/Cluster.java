@@ -226,6 +226,14 @@ public class Cluster {
 
   }
 
+  public String getTableNameForDestnationStream(String streamName) {
+    String tableName = null;
+    if (getDestinationStreams().containsKey(streamName)) {
+      tableName = getDestinationStreams().get(streamName).getTableName();
+    }
+    return tableName;
+  }
+
   public Set<String> getSourceStreams() {
     return sourceStreams;
   }

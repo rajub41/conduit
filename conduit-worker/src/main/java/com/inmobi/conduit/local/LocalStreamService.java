@@ -14,10 +14,12 @@
 package com.inmobi.conduit.local;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -28,10 +30,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.ConfigConstants;
 import com.inmobi.conduit.utils.CalendarHelper;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -50,6 +54,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.mapred.UniformSizeInputFormat;
+import org.apache.hcatalog.api.HCatAddPartitionDesc;
+import org.apache.hcatalog.api.HCatClient;
+import org.apache.hcatalog.common.HCatException;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -729,5 +736,36 @@ public class LocalStreamService extends AbstractService implements
   @Override
   public String getServiceType() {
     return "LocalStreamService";
+  }
+
+  private String addPartition(String location, String streamName, long partTimeStamp) {
+    // parameters --> location, streamName
+    // get DB from Conduit
+    // getTableName for a given stream
+    // construct partSpec
+    //addPartition
+    String dbName = Conduit.gethCatDataBase();
+    HCatClient hcatClient = Conduit.getHCatClient();
+    String tableName = config.getSourceStreams().get(streamName).getTableName(
+        srcCluster.getName());
+    String dateStr = srcCluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
+    String [] dateSplits = dateStr.split(File.separator);
+    Map<String, String> partSpec = new HashMap<String, String>();
+    if (dateSplits.length == 5) {
+      partSpec.put("year", dateSplits[0]);
+      partSpec.put("month", dateSplits[1]);
+      partSpec.put("day", dateSplits[2]);
+      partSpec.put("hour", dateSplits[3]);
+      partSpec.put("minute", dateSplits[4]);
+    }
+    try {
+      HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(dbName,
+          tableName, location, partSpec).build();
+      hcatClient.addPartition(partInfo);
+    } catch (HCatException e) {
+      e.printStackTrace();
+    }
+
+    return null;
   }
 }
