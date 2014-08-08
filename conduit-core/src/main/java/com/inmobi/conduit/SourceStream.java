@@ -20,12 +20,15 @@ public class SourceStream {
   private final String name;
   //Map of ClusterName, Retention for a stream
   private final Map<String, Integer> sourceClusters;
+  private final Map<String, String> sourceStreamTableMap;
 
 
-  public SourceStream(String name, Map<String, Integer> sourceClusters) {
+  public SourceStream(String name, Map<String, Integer> sourceClusters,
+      Map<String, String> sourceStreamTableMap) {
     super();
     this.name = name;
     this.sourceClusters = sourceClusters;
+    this.sourceStreamTableMap = sourceStreamTableMap;
   }
 
   public int getRetentionInHours(String clusterName) {
@@ -41,5 +44,15 @@ public class SourceStream {
     return name;
   }
 
+  public Map<String, String> getSourceStreamTableMap() {
+    return sourceStreamTableMap;
+  }
 
+  public String getTableName(String streamName) {
+    if (sourceStreamTableMap != null
+        && sourceStreamTableMap.containsKey(streamName)) {
+      return sourceStreamTableMap.get(streamName);
+    }
+    return null;
+  }
 }

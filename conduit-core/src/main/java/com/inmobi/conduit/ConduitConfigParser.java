@@ -192,7 +192,8 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
   }
 
   private SourceStream getStream(Element el) throws Exception {
-    Map<String, Integer> sourceStreams = new HashMap<String, Integer>();
+    Map<String, Integer> sourceStreamsRetentionMap = new HashMap<String, Integer>();
+    Map<String, String> sourceStreamsTableMap = new HashMap<String, String>();
     // get sources for each stream
     String streamName = el.getAttribute(NAME);
     NodeList sourceList = el.getElementsByTagName(SOURCE);
@@ -205,11 +206,13 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
       logger.debug(" StreamSource :: streamname " + streamName
           + " retentioninhours " + rententionInHours + " " + "clusterName "
           + clusterName);
-      sourceStreams.put(clusterName, new Integer(rententionInHours));
+      sourceStreamsRetentionMap.put(clusterName, new Integer(rententionInHours));
+      sourceStreamsTableMap.put(streamName, hcatTableName);
     }
     // get all destinations for this stream
     readConsumeStreams(streamName, el);
-    return new SourceStream(streamName, sourceStreams);
+    return new SourceStream(streamName, sourceStreamsRetentionMap,
+        sourceStreamsTableMap);
   }
 
   private void readConsumeStreams(String streamName, Element el)
@@ -232,7 +235,7 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
           + streamName + " cluster " + clusterName + " retentionInHours "
           + retentionInHours + " isPrimary " + isPrimary);
       DestinationStream consumeStream = new DestinationStream(streamName,
-          retentionInHours, isPrimary);
+          retentionInHours, isPrimary, hCatTableName);
       if (clusterConsumeStreams.get(clusterName) == null) {
         List<DestinationStream> consumeStreamList = new ArrayList<DestinationStream>();
         consumeStreamList.add(consumeStream);

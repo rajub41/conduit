@@ -17,11 +17,14 @@ public class DestinationStream {
   private final int retentionInHours;
   private final String name;
   private final Boolean isPrimary;
+  private final String tableName;
 
-  public DestinationStream(String name, int retentionInHours, Boolean isPrimary) {
+  public DestinationStream(String name, int retentionInHours, Boolean isPrimary,
+      String tableName) {
     this.name = name;
     this.retentionInHours = retentionInHours;
     this.isPrimary = isPrimary;
+    this.tableName = tableName;
   }
 
   public boolean isPrimary() {
@@ -34,5 +37,9 @@ public class DestinationStream {
 
   public int getRetentionInHours() {
     return retentionInHours;
+  }
+
+  public String getTableName() {
+    return tableName;
   }
 }
