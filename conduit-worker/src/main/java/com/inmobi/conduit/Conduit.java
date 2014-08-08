@@ -64,6 +64,7 @@ public class Conduit implements Service, ConduitConstants {
   private CuratorLeaderManager curatorLeaderManager = null;
   private volatile boolean conduitStarted = false;
   private static volatile HCatClient hCatClient = null;
+  private static String hCatDataBase = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
                  String currentCluster) {
@@ -90,6 +91,14 @@ public class Conduit implements Service, ConduitConstants {
 
   public static MessagePublisher getPublisher() {
     return publisher;
+  }
+
+  public static String gethCatDataBase() {
+    return hCatDataBase;
+  }
+
+  public static void sethCatDataBase(String hCatDataBase) {
+    Conduit.hCatDataBase = hCatDataBase;
   }
 
   protected List<AbstractService> init() throws Exception {
@@ -549,6 +558,9 @@ public class Conduit implements Service, ConduitConstants {
       }
       HCatClient hcatClient = createHCatClient(metaStoreUrl);
       Conduit.setHcatClient(hcatClient);
+
+      Conduit.sethCatDataBase(hcatalogDataBaseName);
+
       Signal.handle(new Signal("TERM"), new SignalHandler() {
 
         @Override
