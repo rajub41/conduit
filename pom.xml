@@ -22,6 +22,7 @@
   <properties>
     <excluded.testng.groups>integration</excluded.testng.groups>
     <messaging-client-version>4.0.3</messaging-client-version>
+    <hive.version>0.13.0</hive.version>
   </properties>
 
   <profiles>
@@ -121,6 +122,34 @@
 
   <dependencyManagement>
     <dependencies>
+            <dependency>
+                <groupId>org.apache.hcatalog</groupId>
+                <artifactId>webhcat-java-client</artifactId>
+               <version>0.11.0</version>
+               <type>jar</type>
+                <exclusions>
+                    <exclusion>
+                        <!-- This implies you cannot use orc files -->
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hbase</groupId>
+                        <artifactId>hbase-server</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hbase</groupId>
+                        <artifactId>hbase-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hbase</groupId>
+                        <artifactId>hbase-client</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+
+
       <dependency>
         <groupId>com.inmobi.messaging</groupId>
         <artifactId>messaging-client-core</artifactId>

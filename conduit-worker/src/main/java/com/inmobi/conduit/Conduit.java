@@ -46,6 +46,7 @@ import com.inmobi.conduit.zookeeper.CuratorLeaderManager;
 import com.inmobi.messaging.ClientConfig;
 import com.inmobi.messaging.publisher.MessagePublisher;
 import com.inmobi.messaging.publisher.MessagePublisherFactory;
+import org.apache.hcatalog.api.HCatClient;
 
 public class Conduit implements Service, ConduitConstants {
   private static Logger LOG = Logger.getLogger(Conduit.class);
@@ -62,6 +63,7 @@ public class Conduit implements Service, ConduitConstants {
   private volatile boolean initFailed = false;
   private CuratorLeaderManager curatorLeaderManager = null;
   private volatile boolean conduitStarted = false;
+  private static volatile HCatClient hCatClient = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
                  String currentCluster) {
@@ -365,6 +367,27 @@ public class Conduit implements Service, ConduitConstants {
     return null;
   }
 
+  private static HCatClient createHCatClient(String metastoreUrl) {
+    HCatClientApp app = null;
+    try {
+      app = new HCatClientApp(metastoreUrl);
+      app.connect();
+      return app.getClient();
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  private static void setHcatClient(HCatClient hcatClient) {
+    Conduit.hCatClient = hcatClient;
+  }
+
+  public static HCatClient getHCatClient() {
+    return hCatClient;
+  }
+
   public static void main(String[] args) throws Exception {
     try {
       if (args.length != 1 ) {
@@ -524,6 +547,8 @@ public class Conduit implements Service, ConduitConstants {
       if (hcatalogDataBaseName == null) {
         throw new RuntimeException("hcatalogDatabseName is not specified in the conduit cfg");
       }
+      HCatClient hcatClient = createHCatClient(metaStoreUrl);
+      Conduit.setHcatClient(hcatClient);
       Signal.handle(new Signal("TERM"), new SignalHandler() {
 
         @Override
