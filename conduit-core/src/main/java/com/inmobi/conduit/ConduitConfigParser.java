@@ -201,6 +201,7 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
       // for each source
       String clusterName = getTextValue(source, NAME);
       int rententionInHours = getRetention(source, RETENTION_IN_HOURS);
+      String hcatTableName =  getTextValue(source, HCATALOG_TABLE_NAME);
       logger.debug(" StreamSource :: streamname " + streamName
           + " retentioninhours " + rententionInHours + " " + "clusterName "
           + clusterName);
@@ -226,6 +227,7 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
         isPrimary = new Boolean(true);
       else
         isPrimary = new Boolean(false);
+      String hCatTableName =  getTextValue(replicatedConsumeStream, HCATALOG_TABLE_NAME);
       logger.info("Reading Stream Destination Details :: Stream Name "
           + streamName + " cluster " + clusterName + " retentionInHours "
           + retentionInHours + " isPrimary " + isPrimary);
