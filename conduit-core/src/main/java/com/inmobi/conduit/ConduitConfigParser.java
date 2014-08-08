@@ -207,7 +207,7 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
           + " retentioninhours " + rententionInHours + " " + "clusterName "
           + clusterName);
       sourceStreamsRetentionMap.put(clusterName, new Integer(rententionInHours));
-      sourceStreamsTableMap.put(streamName, hcatTableName);
+      sourceStreamsTableMap.put(clusterName, hcatTableName);
     }
     // get all destinations for this stream
     readConsumeStreams(streamName, el);
