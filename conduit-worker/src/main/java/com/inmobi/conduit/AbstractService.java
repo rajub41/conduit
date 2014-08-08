@@ -523,6 +523,7 @@ public abstract class AbstractService implements Service, Runnable {
       long commitTime, Set<String> streams) throws Exception {
     if (streams != null) {
       for (String category : streams) {
+        String tableName = getTableName(category);
         publishMissingPaths(fs, destDir, commitTime, category);
       }
     }
@@ -531,6 +532,11 @@ public abstract class AbstractService implements Service, Runnable {
    * Get the service name from the name
    */
   abstract public String getServiceType();
+
+  /*
+   * Get the table name for a given stream
+   */
+  abstract public String getTableName(String streamName);
 
   private List<Path> listPartFiles(Path path, FileSystem fs) {
     List<Path> matches = new LinkedList<Path>();

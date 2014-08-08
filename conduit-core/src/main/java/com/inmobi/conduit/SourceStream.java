@@ -48,10 +48,10 @@ public class SourceStream {
     return sourceStreamTableMap;
   }
 
-  public String getTableName(String streamName) {
+  public String getTableName(String clusterName) {
     if (sourceStreamTableMap != null
-        && sourceStreamTableMap.containsKey(streamName)) {
-      return sourceStreamTableMap.get(streamName);
+        && sourceStreamTableMap.containsKey(clusterName)) {
+      return sourceStreamTableMap.get(clusterName);
     }
     return null;
   }

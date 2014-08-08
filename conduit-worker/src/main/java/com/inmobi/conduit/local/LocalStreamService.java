@@ -34,6 +34,7 @@ import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.ConfigConstants;
+import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;
 
 import org.apache.commons.logging.Log;
@@ -100,6 +101,7 @@ public class LocalStreamService extends AbstractService implements
   private final Path jarsPath;
   final Path inputFormatJarDestPath;
   final Path auditUtilJarDestPath;
+  Map<String, String> streamTableMap;
 
   public LocalStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster currentCluster, CheckpointProvider provider,
@@ -113,6 +115,8 @@ public class LocalStreamService extends AbstractService implements
       this.currentCluster = srcCluster;
     else
       this.currentCluster = currentCluster;
+    streamTableMap = new HashMap<String, String>();
+    buildStreamTableMap();
     this.tmpPath = new Path(srcCluster.getTmpPath(), getName());
     this.tmpJobInputPath = new Path(tmpPath, "jobIn");
     this.tmpJobOutputPath = new Path(tmpPath, "jobOut");
@@ -147,6 +151,16 @@ public class LocalStreamService extends AbstractService implements
           COMMIT_TIME, eachStream);
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
+    }
+  }
+
+  private void buildStreamTableMap() {
+    Map<String, SourceStream> sourceStreams = config.getSourceStreams();
+    for (String stream : streamsToProcess) {
+      if (sourceStreams.containsKey(stream)) {
+        String tableName = sourceStreams.get(stream).getTableName(srcCluster.getName());
+        streamTableMap.put(stream, tableName);
+      }
     }
   }
 
@@ -265,6 +279,7 @@ public class LocalStreamService extends AbstractService implements
         LOG.debug("Moving [" + file.getPath() + "] to [" + destPath + "]");
         mvPaths.put(file.getPath(), destPath);
       }
+      String tableName = getTableName(categoryName);
       publishMissingPaths(fs,
           srcCluster.getLocalFinalDestDirRoot(), commitTime, categoryName);
     }
@@ -738,17 +753,18 @@ public class LocalStreamService extends AbstractService implements
     return "LocalStreamService";
   }
 
-  private String addPartition(String location, String streamName, long partTimeStamp) {
-    // parameters --> location, streamName
+  private void addPartition(String location, String streamName,
+      long partTimeStamp, String tableName) {
+    // parameters --> location, streamName and tableName
     // get DB from Conduit
-    // getTableName for a given stream
+    // getTableName for a given stream   -----
     // construct partSpec
     //addPartition
     String dbName = Conduit.gethCatDataBase();
     HCatClient hcatClient = Conduit.getHCatClient();
-    String tableName = config.getSourceStreams().get(streamName).getTableName(
-        srcCluster.getName());
-    String dateStr = srcCluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
+   /* String tableName = config.getSourceStreams().get(streamName).getTableName(
+        srcCluster.getName());*/
+    String dateStr = Cluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
     String [] dateSplits = dateStr.split(File.separator);
     Map<String, String> partSpec = new HashMap<String, String>();
     if (dateSplits.length == 5) {
@@ -765,7 +781,13 @@ public class LocalStreamService extends AbstractService implements
     } catch (HCatException e) {
       e.printStackTrace();
     }
+  }
 
-    return null;
+  public String getTableName(String streamName) {
+    String tableName = null;
+    if (streamTableMap.containsKey(streamName)) {
+      tableName = streamTableMap.get(streamName);
+    }
+    return tableName;
   }
 }
