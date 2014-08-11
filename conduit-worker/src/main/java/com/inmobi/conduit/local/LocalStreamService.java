@@ -215,6 +215,8 @@ public class LocalStreamService extends AbstractService implements
         LOG.info("Commiting mvPaths and ConsumerPaths");
 
         commit(prepareForCommit(commitTime), false,auditMsgList);
+        // add partition for all streams
+        
         checkPoint(checkpointPaths);
         LOG.info("Commiting trashPaths");
         commit(populateTrashCommitPaths(trashSet), true, null);
@@ -316,38 +318,50 @@ public class LocalStreamService extends AbstractService implements
     long startTime = System.currentTimeMillis();
     FileSystem fs = FileSystem.get(srcCluster.getHadoopConf());
     Table<String, Long, Long> parsedCounters = parseCountersFile(fs);
-    for (Map.Entry<Path, Path> entry : commitPaths.entrySet()) {
-      LOG.info("Renaming " + entry.getKey() + " to " + entry.getValue());
-      String streamName = null;
-      /*
-       * finding streamname from srcPaths for committing trash paths as we don't
-       * have streamname in destPath.
-       * finding streamname from dest path for other paths
-       */
-      if (!isTrashData) {
-        streamName = getTopicNameFromDestnPath(entry.getValue());
-      } else {
-        streamName = getCategoryFromSrcPath(entry.getKey());
+    Map<String, String> committedStreamsLocationMap = new HashMap<String, String>();
+    try {
+      for (Map.Entry<Path, Path> entry : commitPaths.entrySet()) {
+        LOG.info("Renaming " + entry.getKey() + " to " + entry.getValue());
+        String streamName = null;
+        /*
+         * finding streamname from srcPaths for committing trash paths as we don't
+         * have streamname in destPath.
+         * finding streamname from dest path for other paths
+         */
+        if (!isTrashData) {
+          streamName = getTopicNameFromDestnPath(entry.getValue());
+        } else {
+          streamName = getCategoryFromSrcPath(entry.getKey());
+        }
+        retriableMkDirs(fs, entry.getValue().getParent(), streamName);
+        committedStreamsLocationMap.put(streamName, entry.getValue().getParent().toString());
+        if (retriableRename(fs, entry.getKey(), entry.getValue(), streamName) == false) {
+          LOG.warn("Rename failed, aborting transaction COMMIT to avoid "
+              + "dataloss. Partial data replay could happen in next run");
+          throw new Exception("Abort transaction Commit. Rename failed from ["
+              + entry.getKey() + "] to [" + entry.getValue() + "]");
+        }
+        if (!isTrashData) {
+          String filename = entry.getKey().getName();
+          generateAuditMsgs(streamName, filename, parsedCounters, auditMsgList);
+          ConduitMetrics.updateSWGuage(getServiceType(), FILES_COPIED_COUNT,
+              streamName, 1);
+        }
       }
-      retriableMkDirs(fs, entry.getValue().getParent(), streamName);
-      if (retriableRename(fs, entry.getKey(), entry.getValue(), streamName) == false) {
-        LOG.warn("Rename failed, aborting transaction COMMIT to avoid "
-            + "dataloss. Partial data replay could happen in next run");
-        throw new Exception("Abort transaction Commit. Rename failed from ["
-            + entry.getKey() + "] to [" + entry.getValue() + "]");
+      long elapsedTime = System.currentTimeMillis() - startTime;
+      LOG.debug("Committed " + commitPaths.size() + " paths.");
+      for (String eachStream : streamsToProcess) {
+        ConduitMetrics.updateSWGuage(getServiceType(), COMMIT_TIME,
+            eachStream, elapsedTime);
       }
-      if (!isTrashData) {
-        String filename = entry.getKey().getName();
-        generateAuditMsgs(streamName, filename, parsedCounters, auditMsgList);
-        ConduitMetrics.updateSWGuage(getServiceType(), FILES_COPIED_COUNT,
-            streamName, 1);
+    } finally {
+      for (Map.Entry<String, String> entry : committedStreamsLocationMap.entrySet()) {
+        // add partition 
+        // table name    //database    // stream name   // location  // time
+        long commitTime = -1; // pass commit time to commit method
+        addPartition(entry.getValue(), entry.getKey(), commitTime,
+            getTableName(entry.getKey()));
       }
-    }
-    long elapsedTime = System.currentTimeMillis() - startTime;
-    LOG.debug("Committed " + commitPaths.size() + " paths.");
-    for (String eachStream : streamsToProcess) {
-      ConduitMetrics.updateSWGuage(getServiceType(), COMMIT_TIME,
-          eachStream, elapsedTime);
     }
   }
 
@@ -783,6 +797,7 @@ public class LocalStreamService extends AbstractService implements
     }
   }
 
+  @Override
   public String getTableName(String streamName) {
     String tableName = null;
     if (streamTableMap.containsKey(streamName)) {

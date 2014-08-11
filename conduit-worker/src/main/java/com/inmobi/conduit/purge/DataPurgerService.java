@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.inmobi.conduit.utils.CalendarHelper;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -390,5 +391,12 @@ public class DataPurgerService extends AbstractService {
    */
   public String getServiceType(){
     return "DataPurgerService";
+  }
+
+  @Override
+  public String getTableName(String streamName) {
+    String tableName = null;
+   // tableName = cluster.getSourceStreams().;
+    return tableName;
   }
 }

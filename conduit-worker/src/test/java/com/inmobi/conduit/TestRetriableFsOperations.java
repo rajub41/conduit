@@ -149,4 +149,10 @@ public class TestRetriableFsOperations extends AbstractService {
   protected String getTier() {
     return null;
   }
+  
+
+  @Override
+  public String getTableName(String streamName) {
+    return null;
+  }
 }

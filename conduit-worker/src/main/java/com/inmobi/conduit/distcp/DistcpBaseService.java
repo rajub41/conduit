@@ -28,6 +28,7 @@ import java.util.Set;
 import com.inmobi.conduit.AbstractService;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.FileUtil;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -348,5 +349,12 @@ public abstract class DistcpBaseService extends AbstractService {
     while (tmpPath.depth() != 1)
       tmpPath=tmpPath.getParent();
     return tmpPath.getName();
+  }
+
+  @Override
+  public String getTableName(String streamName) {
+    String tableName = null;
+    tableName = destCluster.getDestinationStreams().get(streamName).getTableName();
+    return tableName;
   }
 }
