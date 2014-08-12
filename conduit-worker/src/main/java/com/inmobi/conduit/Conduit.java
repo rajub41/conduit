@@ -27,6 +27,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.inmobi.conduit.local.LocalStreamService;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -62,6 +63,8 @@ public class Conduit implements Service, ConduitConstants {
   private volatile boolean initFailed = false;
   private CuratorLeaderManager curatorLeaderManager = null;
   private volatile boolean conduitStarted = false;
+  private static boolean isHCatEnabled = false;
+  private static String hcatDBName = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
                  String currentCluster) {
@@ -88,6 +91,14 @@ public class Conduit implements Service, ConduitConstants {
 
   public static MessagePublisher getPublisher() {
     return publisher;
+  }
+
+  public static String getHcatDBName() {
+    return hcatDBName;
+  }
+
+  public static void setHcatDBName(String hcatDBName) {
+    Conduit.hcatDBName = hcatDBName;
   }
 
   protected List<AbstractService> init() throws Exception {
@@ -480,6 +491,21 @@ public class Conduit implements Service, ConduitConstants {
         }
       }
 
+      String hcatEnabled = prop.getProperty(HCAT_ENABLED);
+      if (hcatEnabled != null && Boolean.parseBoolean(hcatEnabled)) {
+        LOG.info("HCAT is enabled for worker ");
+        isHCatEnabled = true;
+        String hcatDBName = prop.getProperty(HCAT_DATABASE_NAME);
+        if (hcatDBName != null && !hcatDBName.isEmpty()) {
+          Conduit.setHcatDBName(hcatDBName);
+        } else {
+          throw new RuntimeException("HCAT DataBase name is not specified"
+              + " in the conduit config file");
+        }
+      } else {
+        LOG.info("HCAT is not enabled for the worker ");
+      }
+
       ConduitConfigParser configParser =
           new ConduitConfigParser(conduitConfigFile);
       ConduitConfig config = configParser.getConfig();
@@ -514,8 +540,7 @@ public class Conduit implements Service, ConduitConstants {
          */
         System.setProperty(AUDIT_ENABLED_KEY, "false");
       }
-      conduit.setPublisher(msgPublisher);
-
+      Conduit.setPublisher(msgPublisher);
       Signal.handle(new Signal("TERM"), new SignalHandler() {
 
         @Override

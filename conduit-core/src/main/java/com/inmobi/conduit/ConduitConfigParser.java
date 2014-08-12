@@ -195,6 +195,11 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
     Map<String, Integer> sourceStreams = new HashMap<String, Integer>();
     // get sources for each stream
     String streamName = el.getAttribute(NAME);
+    String hcatEnabled = el.getAttribute(HCAT_ENABLED_PER_STREAM);
+    boolean isHCatEnabled = false;
+    if (hcatEnabled != null && !hcatEnabled.isEmpty()) {
+      isHCatEnabled = Boolean.parseBoolean(hcatEnabled);
+    }
     NodeList sourceList = el.getElementsByTagName(SOURCE);
     for (int i = 0; i < sourceList.getLength(); i++) {
       Element source = (Element) sourceList.item(i);
