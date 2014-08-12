@@ -29,6 +29,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import com.inmobi.conduit.utils.CalendarHelper;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -78,6 +79,8 @@ public abstract class AbstractService implements Service, Runnable {
   public final static String FILES_COPIED_COUNT = "filesCopied.count";
   public final static String DATAPURGER_SERVICE = "DataPurgerService";
   public final static String LAST_FILE_PROCESSED = "lastfile.processed";
+  private static final String HCAT_PARTITION = "partition";
+  protected Map<String, String> lastAddedPartitionMap = new HashMap<String, String>();
 
   protected static String hostname;
   static {
@@ -141,6 +144,10 @@ public abstract class AbstractService implements Service, Runnable {
   public static String getCheckPointKey(String serviceName, String stream,
       String source) {
     return serviceName + "_" + stream + "_" + source;
+  }
+
+  public static String getHcatPatitionCheckPointKey(String serviceName, String stream) {
+    return serviceName + "_" + stream + "_" + HCAT_PARTITION;
   }
 
   protected void preExecute() throws Exception {
@@ -329,6 +336,41 @@ public abstract class AbstractService implements Service, Runnable {
     // prevRuntimeForCategory map is updated with commitTime,
     // even if prevRuntime is -1, since service did run at this point
     prevRuntimeForCategory.put(categoryName, commitTime);
+  }
+
+  protected void publishMissingPartitions(FileSystem fs, String destDir,
+      long commitTime, String categoryName) throws Exception {
+    String prevPartitionTime = null;
+    if (!lastAddedPartitionMap.containsKey(categoryName)) {
+      LOG.debug("Calculating Previous Runtime from Directory Listing");
+      prevPartitionTime = lastAddedPartitionMap.get(categoryName);
+    } else {
+      LOG.debug("Reading Previous Runtime from Cache");
+      prevPartitionTime = lastAddedPartitionMap.get(categoryName);
+    }
+
+    if (prevPartitionTime != null) {
+      // parse the string with user defined method
+      Long prevRuntime = Long.parseLong(prevPartitionTime);
+      if (isMissingPaths(commitTime, prevRuntime)) {
+        LOG.debug("Previous Runtime: [" + getLogDateString(prevRuntime) + "]");
+        while (isMissingPaths(commitTime, prevRuntime)) {
+          String missingPath = Cluster.getDestDir(destDir, categoryName,
+              prevRuntime);
+          Path missingDir = new Path(missingPath);
+          if (fs.exists(missingDir)) {
+            //add partition
+            
+            ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
+                categoryName, 1);
+          }
+          prevRuntime += MILLISECONDS_IN_MINUTE;
+        }
+      }
+    }
+    // prevRuntimeForCategory map is updated with commitTime,
+    // even if prevRuntime is -1, since service did run at this point
+    //lastAddedPartitionMap.put(categoryName, commitTime);
   }
 
   /*
@@ -528,6 +570,17 @@ public abstract class AbstractService implements Service, Runnable {
       }
     }
   }
+  
+  protected void publishMissingPartitions(FileSystem fs, String destDir,
+      long commitTime, Set<String> streams) throws Exception {
+    if (streams != null) {
+      for (String category : streams) {
+        String tableName = getTableName(category);
+        publishMissingPartitions(fs, destDir, commitTime, category);
+      }
+    }
+  }
+  
   /**
    * Get the service name from the name
    */

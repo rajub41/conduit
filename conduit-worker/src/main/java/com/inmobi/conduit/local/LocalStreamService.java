@@ -116,7 +116,12 @@ public class LocalStreamService extends AbstractService implements
     else
       this.currentCluster = currentCluster;
     streamTableMap = new HashMap<String, String>();
+    // get table name for each stream
     buildStreamTableMap();
+    
+    // read checkpoint and update map 
+    prepareLastAddedPartitionMap();
+
     this.tmpPath = new Path(srcCluster.getTmpPath(), getName());
     this.tmpJobInputPath = new Path(tmpPath, "jobIn");
     this.tmpJobOutputPath = new Path(tmpPath, "jobOut");
@@ -154,6 +159,20 @@ public class LocalStreamService extends AbstractService implements
     }
   }
 
+  private void prepareLastAddedPartitionMap() {
+    for (String stream : streamsToProcess) {
+      String partitionCheckpointKey = getHcatPatitionCheckPointKey(getClass().getSimpleName(), stream);
+      String partitionCheckPointValue = null;
+      byte[] value = checkpointProvider.read(partitionCheckpointKey);
+      if (value != null) {
+        partitionCheckPointValue = new String(value);
+        lastAddedPartitionMap.put(stream, partitionCheckPointValue);
+        LOG.debug("partitionCheckPoint Key [" + partitionCheckpointKey + "] value [ "
+            + partitionCheckPointValue + "]");
+      }
+    }
+  }
+
   private void buildStreamTableMap() {
     Map<String, SourceStream> sourceStreams = config.getSourceStreams();
     for (String stream : streamsToProcess) {
@@ -188,6 +207,8 @@ public class LocalStreamService extends AbstractService implements
       LOG.info("TmpPath is [" + tmpPath + "]");
       long commitTime = srcCluster.getCommitTime();
       publishMissingPaths(fs,
+          srcCluster.getLocalFinalDestDirRoot(), commitTime, streamsToProcess);
+      publishMissingPartitions(fs,
           srcCluster.getLocalFinalDestDirRoot(), commitTime, streamsToProcess);
       Map<FileStatus, String> fileListing = new TreeMap<FileStatus, String>();
       Set<FileStatus> trashSet = new HashSet<FileStatus>();
@@ -235,6 +256,8 @@ public class LocalStreamService extends AbstractService implements
       LOG.warn("Error in running LocalStreamService ", e);
       throw e;
     } finally {
+    //TODO update the partitionCheckpoint
+      
       publishAuditMessages(auditMsgList);
     }
   }
@@ -767,7 +790,7 @@ public class LocalStreamService extends AbstractService implements
     return "LocalStreamService";
   }
 
-  private void addPartition(String location, String streamName,
+  public void addPartition(String location, String streamName,
       long partTimeStamp, String tableName) {
     // parameters --> location, streamName and tableName
     // get DB from Conduit
