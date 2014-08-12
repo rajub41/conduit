@@ -208,16 +208,16 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
       int rententionInHours = getRetention(source, RETENTION_IN_HOURS);
       logger.debug(" StreamSource :: streamname " + streamName
           + " retentioninhours " + rententionInHours + " " + "clusterName "
-          + clusterName);
+          + clusterName + " isHCatEnabled " + isHCatEnabled);
       sourceStreams.put(clusterName, new Integer(rententionInHours));
     }
     // get all destinations for this stream
-    readConsumeStreams(streamName, el);
-    return new SourceStream(streamName, sourceStreams);
+    readConsumeStreams(streamName, el, isHCatEnabled);
+    return new SourceStream(streamName, sourceStreams, isHCatEnabled);
   }
 
-  private void readConsumeStreams(String streamName, Element el)
-      throws Exception {
+  private void readConsumeStreams(String streamName, Element el,
+      boolean isHCatEnabled) throws Exception {
     NodeList consumeStreamNodeList = el.getElementsByTagName(DESTINATION);
     for (int i = 0; i < consumeStreamNodeList.getLength(); i++) {
       Element replicatedConsumeStream = (Element) consumeStreamNodeList.item(i);
@@ -233,9 +233,10 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
         isPrimary = new Boolean(false);
       logger.info("Reading Stream Destination Details :: Stream Name "
           + streamName + " cluster " + clusterName + " retentionInHours "
-          + retentionInHours + " isPrimary " + isPrimary);
+          + retentionInHours + " isPrimary " + isPrimary + " isHCatEnabled "
+          + isHCatEnabled);
       DestinationStream consumeStream = new DestinationStream(streamName,
-          retentionInHours, isPrimary);
+          retentionInHours, isPrimary, isHCatEnabled);
       if (clusterConsumeStreams.get(clusterName) == null) {
         List<DestinationStream> consumeStreamList = new ArrayList<DestinationStream>();
         consumeStreamList.add(consumeStream);
