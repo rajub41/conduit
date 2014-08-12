@@ -65,6 +65,7 @@ public class Conduit implements Service, ConduitConstants {
   private volatile boolean conduitStarted = false;
   private static boolean isHCatEnabled = false;
   private static String hcatDBName = null;
+  private static int numOfHCatClients = 10;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
                  String currentCluster) {
@@ -501,6 +502,14 @@ public class Conduit implements Service, ConduitConstants {
         } else {
           throw new RuntimeException("HCAT DataBase name is not specified"
               + " in the conduit config file");
+        }
+        String numHCatClients = prop.getProperty(NUM_OF_HCAT_CLIENTS);
+        if (numHCatClients != null) {
+          LOG.info("number of HCatClients configured " + numHCatClients);
+          numOfHCatClients = Integer.parseInt(numHCatClients);
+        } else {
+          LOG.info("Number of HcatClients is not configured. Create "
+              + numOfHCatClients + " HCatCleints");
         }
       } else {
         LOG.info("HCAT is not enabled for the worker ");
