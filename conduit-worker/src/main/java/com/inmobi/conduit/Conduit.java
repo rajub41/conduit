@@ -30,7 +30,9 @@ import com.inmobi.conduit.local.LocalStreamService;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -66,6 +68,7 @@ public class Conduit implements Service, ConduitConstants {
   private static boolean isHCatEnabled = false;
   private static String hcatDBName = null;
   private static int numOfHCatClients = 10;
+  private static HCatClientUtil hcatUtil = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
                  String currentCluster) {
@@ -291,6 +294,20 @@ public class Conduit implements Service, ConduitConstants {
 
   }
 
+  public static HCatClient getHCatClient() throws InterruptedException {
+    return hcatUtil.getHCatClient();
+  }
+
+  private static void createHCatClients(String metastoreUrl) {
+    try {
+      hcatUtil = new HCatClientUtil(metastoreUrl);
+      hcatUtil.createHCatClients(numOfHCatClients);
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
   @Override
   public void stop() throws Exception {
     stopRequested = true;
@@ -496,21 +513,17 @@ public class Conduit implements Service, ConduitConstants {
       if (hcatEnabled != null && Boolean.parseBoolean(hcatEnabled)) {
         LOG.info("HCAT is enabled for worker ");
         isHCatEnabled = true;
-        String hcatDBName = prop.getProperty(HCAT_DATABASE_NAME);
-        if (hcatDBName != null && !hcatDBName.isEmpty()) {
-          Conduit.setHcatDBName(hcatDBName);
-        } else {
-          throw new RuntimeException("HCAT DataBase name is not specified"
-              + " in the conduit config file");
+        /*
+         * parse the hcat database name and number of hcat clients needs
+         * to be created
+         */
+        parseHCatProperties(prop);
+        HiveConf conf = new HiveConf();
+        String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
+        if (metastoreUrl == null) {
+          throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
         }
-        String numHCatClients = prop.getProperty(NUM_OF_HCAT_CLIENTS);
-        if (numHCatClients != null) {
-          LOG.info("number of HCatClients configured " + numHCatClients);
-          numOfHCatClients = Integer.parseInt(numHCatClients);
-        } else {
-          LOG.info("Number of HcatClients is not configured. Create "
-              + numOfHCatClients + " HCatCleints");
-        }
+        createHCatClients(metastoreUrl);
       } else {
         LOG.info("HCAT is not enabled for the worker ");
       }
@@ -575,6 +588,24 @@ public class Conduit implements Service, ConduitConstants {
     catch (Exception e) {
       LOG.warn("Error in starting Conduit daemon", e);
       throw new Exception(e);
+    }
+  }
+
+  private static void parseHCatProperties(Properties prop) {
+    String hcatDBName = prop.getProperty(HCAT_DATABASE_NAME);
+    if (hcatDBName != null && !hcatDBName.isEmpty()) {
+      Conduit.setHcatDBName(hcatDBName);
+    } else {
+      throw new RuntimeException("HCAT DataBase name is not specified"
+          + " in the conduit config file");
+    }
+    String numHCatClients = prop.getProperty(NUM_OF_HCAT_CLIENTS);
+    if (numHCatClients != null) {
+      LOG.info("number of HCatClients configured " + numHCatClients);
+      numOfHCatClients = Integer.parseInt(numHCatClients);
+    } else {
+      LOG.info("Number of HcatClients is not configured. Create "
+          + numOfHCatClients + " HCatCleints");
     }
   }
 
