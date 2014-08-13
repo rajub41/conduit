@@ -298,6 +298,10 @@ public class Conduit implements Service, ConduitConstants {
     return hcatUtil.getHCatClient();
   }
 
+  public static void submitBack(HCatClient hCatClient) throws InterruptedException {
+    hcatUtil.submitBack(hCatClient);
+  }
+
   private static void createHCatClients(String metastoreUrl) {
     try {
       hcatUtil = new HCatClientUtil(metastoreUrl);

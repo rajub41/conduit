@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,18 +29,24 @@ import java.util.Set;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.FileUtil;
+import com.inmobi.conduit.utils.HCatPartitionComparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
+import org.apache.hive.hcatalog.api.HCatClient;
+import org.apache.hive.hcatalog.api.HCatPartition;
+import org.apache.hive.hcatalog.common.HCatException;
 
 import com.google.common.collect.Table;
 import com.inmobi.audit.thrift.AuditMessage;
 import com.inmobi.conduit.metrics.ConduitMetrics;
 import com.inmobi.conduit.CheckpointProvider;
 import com.inmobi.conduit.Cluster;
+import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.utils.DatePathComparator;
 
 /* Assumption - Mirror is always of a merged Stream.There is only 1 instance of a merged Stream
@@ -51,6 +58,7 @@ import com.inmobi.conduit.utils.DatePathComparator;
 
 public class MirrorStreamService extends DistcpBaseService {
   private static final Log LOG = LogFactory.getLog(MirrorStreamService.class);
+  private static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
 
   public MirrorStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
@@ -72,6 +80,93 @@ public class MirrorStreamService extends DistcpBaseService {
           COMMIT_TIME, eachStream);
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
+    }
+  }
+
+
+  private void prepareLastAddedPartitionMap() throws InterruptedException {
+    HCatClient hcatClient = Conduit.getHCatClient();
+    for (String stream : streamsToProcess) {
+      try {
+        List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
+            Conduit.getHcatDBName(), getTableName(stream));
+        Collections.sort(hCatPartitionList, new HCatPartitionComparator());
+        HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
+        Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
+            lastHcatPartition.getLocation(), stream);
+        if (lastAddedPartitionDate != null) {
+          lastAddedPartitionMap  .put(stream, lastAddedPartitionDate.getTime());
+        }
+      } catch (HCatException e) {
+        e.printStackTrace();
+      }
+    }
+    
+  }
+
+  private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
+    String streamRootDirPrefix = destCluster.getFinalDestDirRoot() + stream;
+    Date lastAddedPartitionDate = CalendarHelper.getDateFromStreamDir(
+        streamRootDirPrefix, lastHcatPartitionLoc);
+    return lastAddedPartitionDate;
+  }
+
+
+  private String getTableName(String streamName) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(TABLE_PREFIX);
+    sb.append("_");
+    sb.append(streamName);
+    return sb.toString();
+  }
+
+
+  private void publishMissingPartitions(long commitTime, String streamName) {
+    long lastAddedTime = lastAddedPartitionMap.get(streamName);
+    long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
+     if (isMissingPartitions(commitTime, nextPartitionTime)) {
+       LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
+       while (isMissingPartitions(commitTime, nextPartitionTime)) {
+         String missingPartition = Cluster.getDestDir(
+             destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
+         try {
+          addPartition(missingPartition, streamName, nextPartitionTime,
+              getTableName(streamName));
+        } catch (InterruptedException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+       }
+     }
+  }
+
+  public void addPartition(String location, String streamName,
+      long partTimeStamp, String tableName) throws InterruptedException {
+    // parameters --> location, streamName and tableName
+    // get DB from Conduit
+    // getTableName for a given stream   -----
+    // construct partSpec
+    //addPartition
+    String dbName = Conduit.getHcatDBName();
+    HCatClient hcatClient = Conduit.getHCatClient();
+   /* String tableName = config.getSourceStreams().get(streamName).getTableName(
+        srcCluster.getName());*/
+    String dateStr = Cluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
+    String [] dateSplits = dateStr.split(File.separator);
+    Map<String, String> partSpec = new HashMap<String, String>();
+    if (dateSplits.length == 5) {
+      partSpec.put("year", dateSplits[0]);
+      partSpec.put("month", dateSplits[1]);
+      partSpec.put("day", dateSplits[2]);
+      partSpec.put("hour", dateSplits[3]);
+      partSpec.put("minute", dateSplits[4]);
+    }
+    try {
+      HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(dbName,
+          tableName, location, partSpec).build();
+      hcatClient.addPartition(partInfo);
+    } catch (HCatException e) {
+      e.printStackTrace();
     }
   }
 

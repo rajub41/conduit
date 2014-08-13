@@ -22,10 +22,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import com.inmobi.conduit.utils.CalendarHelper;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -225,6 +227,13 @@ public class Cluster {
     return primaryStreams;
 
   }
+
+  /*public SourceStream getSourceStream(String stream) {
+    Iterator<String> sourceIt = sourceStreams.iterator();
+    while (sourceIt.hasNext()) {
+      
+    }
+  }*/
 
   public Set<String> getSourceStreams() {
     return sourceStreams;

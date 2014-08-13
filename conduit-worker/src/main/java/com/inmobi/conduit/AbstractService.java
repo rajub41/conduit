@@ -325,6 +325,8 @@ public abstract class AbstractService implements Service, Runnable {
         }
       }
     }
+    //publishMissingPartitions(commitTime);
+    // 
     // prevRuntimeForCategory map is updated with commitTime,
     // even if prevRuntime is -1, since service did run at this point
     prevRuntimeForCategory.put(categoryName, commitTime);
@@ -516,6 +518,10 @@ public abstract class AbstractService implements Service, Runnable {
 
   private boolean isMissingPaths(long commitTime, long prevRuntime) {
     return ((commitTime - prevRuntime) >= MILLISECONDS_IN_MINUTE);
+  }
+
+  protected boolean isMissingPartitions(long commitTime, long lastAddedPartTime) {
+    return ((commitTime - lastAddedPartTime) >= MILLISECONDS_IN_MINUTE);
   }
 
   protected void publishMissingPaths(FileSystem fs, String destDir,
