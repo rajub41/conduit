@@ -130,6 +130,10 @@ public class MergedStreamService extends DistcpBaseService {
       return;
     }
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
+    if (lastAddedTime == -1) {
+      lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+      return;
+    }
     long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
      if (isMissingPartitions(commitTime, nextPartitionTime)) {
        LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
