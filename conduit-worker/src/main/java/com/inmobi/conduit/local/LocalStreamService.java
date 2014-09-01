@@ -39,6 +39,7 @@ import com.inmobi.conduit.ConfigConstants;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.HCatPartitionComparator;
 
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -47,6 +48,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -169,6 +171,9 @@ public class LocalStreamService extends AbstractService implements
             lastHcatPartition.getLocation(), stream);
         if (lastAddedPartitionDate != null) {
           lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+        } else {
+          // if there are no partitions in the hcatalog table then it should create partitions from current time
+          lastAddedPartitionMap.put(stream, -1);
         }
       } catch (HCatException e) {
         e.printStackTrace();
@@ -194,6 +199,10 @@ public class LocalStreamService extends AbstractService implements
 
   private void publishMissingPartitions(long commitTime, String streamName) {
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
+    if (lastAddedTime == -1) {
+      lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+      return;
+    }
     long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
      if (isMissingPartitions(commitTime, nextPartitionTime)) {
        LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
@@ -206,13 +215,16 @@ public class LocalStreamService extends AbstractService implements
         } catch (InterruptedException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
+        } catch (ParseException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
         }
        }
      }
   }
 
   public void addPartition(String location, String streamName,
-      long partTimeStamp, String tableName) throws InterruptedException {
+      long partTimeStamp, String tableName) throws InterruptedException, ParseException {
     // parameters --> location, streamName and tableName
     // get DB from Conduit
     // getTableName for a given stream   -----
