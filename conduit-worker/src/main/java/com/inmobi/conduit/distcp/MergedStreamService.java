@@ -124,6 +124,11 @@ public class MergedStreamService extends DistcpBaseService {
 
 
   private void publishMissingPartitions(long commitTime, String streamName) {
+    if (destCluster.getDestinationStreams().containsKey(streamName)
+        && !destCluster.getDestinationStreams().get(streamName).isHCatEnabled()) {
+     //TODO add log  or properly fix it here
+      return;
+    }
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
     long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
      if (isMissingPartitions(commitTime, nextPartitionTime)) {

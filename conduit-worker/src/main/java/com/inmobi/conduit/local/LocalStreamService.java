@@ -198,6 +198,11 @@ public class LocalStreamService extends AbstractService implements
   }
 
   private void publishMissingPartitions(long commitTime, String streamName) {
+    if (config.getSourceStreams().containsKey(streamName)
+        && !config.getSourceStreams().get(streamName).isHCatEnabled()) {
+      //TODO add LOG or fix it properly
+      return;
+    }
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
     if (lastAddedTime == -1) {
       lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
