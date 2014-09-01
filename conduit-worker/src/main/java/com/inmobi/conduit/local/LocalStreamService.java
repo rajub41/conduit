@@ -173,7 +173,7 @@ public class LocalStreamService extends AbstractService implements
           lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
         } else {
           // if there are no partitions in the hcatalog table then it should create partitions from current time
-          lastAddedPartitionMap.put(stream, -1);
+          lastAddedPartitionMap.put(stream, (long) -1);
         }
       } catch (HCatException e) {
         e.printStackTrace();

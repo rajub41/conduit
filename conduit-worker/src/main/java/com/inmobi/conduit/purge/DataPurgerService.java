@@ -26,15 +26,20 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.inmobi.conduit.utils.CalendarHelper;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hcatalog.api.HCatAddPartitionDesc;
+import org.apache.hive.hcatalog.api.HCatClient;
+import org.apache.hive.hcatalog.common.HCatException;
 
 import com.inmobi.conduit.metrics.ConduitMetrics;
 import com.inmobi.conduit.AbstractService;
 import com.inmobi.conduit.Cluster;
+import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConfigParser;
 import com.inmobi.conduit.DestinationStream;
@@ -54,6 +59,7 @@ public class DataPurgerService extends AbstractService {
   private final Integer defaultstreamPathRetentioninHours;
   private Map<String, Integer> streamRetention;
   private Set<Path> streamsToPurge;
+  private Map<String, Set<Map<String, String>>> partitionsToPurge = new HashMap<String, Set<Map<String, String>>>();
   private DateFormat dateFormat = new SimpleDateFormat("yyyy:MM:dd:HH:mm");
   private static long MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
   private final static String PURGEPATHS_COUNT = "purgePaths.count";
@@ -183,6 +189,8 @@ public class DataPurgerService extends AbstractService {
       Map<String, Path> localStreamsInClusterPathMap = getStreamsInCluster(localStreamRoot);
       getPathsToPurge(mergedStreamsInClusterPathMap,
           localStreamsInClusterPathMap);
+      // TODO purge partitions from the corresponding hcatlog tables.
+      // For that we need a map of streams and set of partitionDescs
       purge();
     } catch (Exception e) {
       LOG.warn(e);
@@ -212,8 +220,19 @@ public class DataPurgerService extends AbstractService {
             try {
               Calendar trashPathHourDate = getDateFromTrashPath(trashPath
                   .getPath().getName(), trashHourPath.getPath().getName());
-              if (isPurge(trashPathHourDate, getTrashPathRetentionInHours()))
+              if (isPurge(trashPathHourDate, getTrashPathRetentionInHours())) {
                 streamsToPurge.add(trashHourPath.getPath().makeQualified(fs));
+                String stream = trashPath.getPath().getParent().getName();
+                //partitionTobePurged(trashPath, trashHourPath, stream);
+                /*Map<String, String> partSpec = new HashMap<String, String>();
+                  
+                  partSpec.put("year", trashPathHourDate.get);
+                  partSpec.put("month", dateSplits[1]);
+                  partSpec.put("day", dateSplits[2]);
+                  partSpec.put("hour", dateSplits[3]);*/
+                  
+                
+              }
             } catch (NumberFormatException e) {
               streamsToPurge.add(trashHourPath.getPath().makeQualified(fs));
             }
@@ -238,6 +257,29 @@ public class DataPurgerService extends AbstractService {
     }
   }
 
+  /*private void partitionTobePurged(String trashDatePath, Path trashHourPath, String stream) {
+    // Eg: TrashPath :: 2012-1-9
+    String[] date = trashDatePath.split("-");
+    String year = date[0];
+    String month = date[1];
+    String day = date[2];
+    String hour = trashHourPath.getName();
+
+    Map<String, String> partSpec = new HashMap<String, String>();
+    
+    partSpec.put("year", year);
+    partSpec.put("month", month);
+    partSpec.put("day", day);
+    partSpec.put("hour", hour);
+    HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(Conduit.getHcatDBName(),
+        tableName, location, partSpec).build();
+    
+    Set<HCatAddPartitionDesc> partitions = partitionsToPurge.get(stream);
+    if (partitions != null) {
+      partitions.add(e)
+    }
+  }
+  */
   private Calendar getDateFromTrashPath(String trashDatePath,
       String trashHourPath) {
     // Eg: TrashPath :: 2012-1-9
@@ -245,6 +287,7 @@ public class DataPurgerService extends AbstractService {
     String year = date[0];
     String month = date[1];
     String day = date[2];
+    
     return CalendarHelper.getDateHour(year, month, day, trashHourPath);
 
   }
@@ -276,50 +319,95 @@ public class DataPurgerService extends AbstractService {
           + "] streamRootPath [" + streamRootPath + "]");
       // For each Stream, all years
       FileStatus[] years = getAllFilesInDir(streamRootPath, fs);
+      Map<String, String> partSpec = new HashMap<String, String>();
       if (years != null) {
         for (FileStatus year : years) {
+          String yearVal = year.getPath().getName();
+          partSpec.put("year", yearVal);
           // For each month
           FileStatus[] months = getAllFilesInDir(year.getPath(), fs);
           if (months != null && months.length >= 1) {
             for (FileStatus month : months) {
+              String monthVal = month.getPath().getName();
+              partSpec.put("month", monthVal);
               // For each day
               FileStatus[] days = getAllFilesInDir(month.getPath(), fs);
               if (days != null && days.length >= 1) {
                 for (FileStatus day : days) {
+                  String dayVal = day.getPath().getName();
+                  partSpec.put("day", dayVal);
                   // For each day
                   FileStatus[] hours = getAllFilesInDir(day.getPath(), fs);
                   if (hours != null && hours.length >= 1) {
                     for (FileStatus hour : hours) {
                       LOG.debug("Working for hour [" + hour.getPath() + "]");
-                      Calendar streamDate = CalendarHelper.getDateHour(year
-                          .getPath().getName(), month.getPath().getName(), day
-                          .getPath().getName(), hour.getPath().getName());
+                      
+                      String hourVal = hour.getPath().getName();
+                      Calendar streamDate = CalendarHelper.getDateHour(yearVal,
+                          monthVal, dayVal, hourVal);
                       LOG.debug("Validate [" + streamDate.toString()
                           + "] against retentionHours ["
                           + getRetentionPeriod(streamName) + "]");
                       if (isPurge(streamDate, getRetentionPeriod(streamName))) {
                         LOG.debug("Adding stream to purge [" + hour.getPath()
                             + "]");
+                        // TODO update deletePartitionMap for purging 
+                        // Map<Stream, Set<partitionDesc>>
+                        //partitionTobePurged(trashPath, trashHourPath, stream);
+                          partSpec.put("hour", hourVal);
+                          //TODO check   && pass table name instead of streamName
+                          addPartitionToPurgeList(streamName, partSpec);
                         streamsToPurge.add(hour.getPath().makeQualified(fs));
+                        
                       }
                     }
                   } else {
+                    //TODO check 
+                    partSpec.remove("hour");
+                    addPartitionToPurgeList(streamName, partSpec);
+
                     // No hour found in day. Purge day
                     streamsToPurge.add(day.getPath().makeQualified(fs));
                   }
                 } // each day
               } else {
+
+                //TODO check 
+                partSpec.remove("hour");
+                partSpec.remove("day");
+                addPartitionToPurgeList(streamName, partSpec);
                 // No day found in month. Purge month
                 streamsToPurge.add(month.getPath().makeQualified(fs));
               }
             }// each month
           } else {
+            //TODO check 
+            partSpec.put("year", yearVal);
+            partSpec.remove("day");
+            partSpec.remove("month");
+            addPartitionToPurgeList(streamName, partSpec);
+
             // no months found in year. Purge Year.
             streamsToPurge.add(year.getPath().makeQualified(fs));
           }
         }// each year
       }
     }// each stream
+  }
+
+  private void addPartitionToPurgeList(String tableName,
+      Map<String, String> partSpec) throws HCatException {
+   /* org.apache.hive.hcatalog.api.HCatAddPartitionDesc partInfo = org.apache.hive.hcatalog.api.HCatAddPartitionDesc.create(Conduit.getHcatDBName(),
+        "", "", partSpec).build();
+   */ 
+    Set<Map<String, String>> partitions = partitionsToPurge.get(tableName);
+    if (partitions != null) {
+      partitions.add(partSpec);
+    } else {
+     partitions = new TreeSet<Map<String, String>>();
+     partitions.add(partSpec);
+    }
+    partitionsToPurge.put(tableName, partitions);
   }
 
   public boolean isPurge(Calendar streamDate, Integer retentionPeriodinHours) {
@@ -347,11 +435,36 @@ public class DataPurgerService extends AbstractService {
   }
 
   private void purge() {
+    //TODO ***** do hcat operations only if hcatalog is enabled
+    // get the hcatClient
+    HCatClient hcatClient = null;
+    try {
+      hcatClient = Conduit.getHCatClient();
+    } catch (InterruptedException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    }
+    String hcatDB = Conduit.getHcatDBName();
+    Set<Map.Entry<String, Set<Map<String, String>>>> entrySet = partitionsToPurge.entrySet();
+   
+    for (Map.Entry<String, Set<Map<String, String>>> entry : entrySet) {
+      Iterator<Map<String, String>> partIt = entry.getValue().iterator();
+      while (partIt.hasNext()) {
+        try {
+          hcatClient.dropPartitions(Conduit.getHcatDBName(), entry.getKey(), partIt.next(), true);
+        } catch (HCatException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      }
+    }
     Iterator it = streamsToPurge.iterator();
     Path purgePath = null;
     while (it.hasNext()) {
       try {
         purgePath = (Path) it.next();
+        // construct a partitionDesc and delete from the corresponding table from the hcatalog
+       
         fs.delete(purgePath, true);
         LOG.info("Purging [" + purgePath + "]");
         ConduitMetrics.updateSWGuage(getServiceType(), PURGEPATHS_COUNT, getName(), 1);
