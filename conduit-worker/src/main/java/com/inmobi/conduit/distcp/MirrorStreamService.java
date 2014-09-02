@@ -121,9 +121,9 @@ public class MirrorStreamService extends DistcpBaseService {
   }
 
 
-  private void publishMissingPartitions(long commitTime, String streamName) {
+  private void publishMissingPartitions(Path destPath, String streamName) {
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
-    long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
+    /*long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
      if (isMissingPartitions(commitTime, nextPartitionTime)) {
        LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
        while (isMissingPartitions(commitTime, nextPartitionTime)) {
@@ -137,7 +137,24 @@ public class MirrorStreamService extends DistcpBaseService {
           e.printStackTrace();
         }
        }
-     }
+     }*/
+    Path streamDirPrefix = new Path(destCluster.getFinalDestDirRoot(), streamName);
+    Date fileTimeStamp = CalendarHelper.getDateFromStreamDir(streamDirPrefix, destPath);
+    long nextPartitionTime = fileTimeStamp.getTime() - MILLISECONDS_IN_MINUTE;
+    if (lastAddedTime >= nextPartitionTime) {
+      return;
+    } else {
+      String missingPartition = Cluster.getDestDir(
+          destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
+      try {
+        addPartition(missingPartition, streamName, nextPartitionTime,
+            getTableName(streamName));
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+      lastAddedPartitionMap.put(streamName, nextPartitionTime);
+    }
   }
 
   public void addPartition(String location, String streamName,
@@ -259,6 +276,7 @@ public class MirrorStreamService extends DistcpBaseService {
       String streamName = getTopicNameFromDestnPath(entry.getValue());
       if (entry.getKey().isDir()) {
         retriableMkDirs(getDestFs(), entry.getValue(), streamName);
+        publishMissingPartitions(entry.getValue(), streamName);
         ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
             streamName, 1);
       } else {
@@ -268,6 +286,7 @@ public class MirrorStreamService extends DistcpBaseService {
           continue;
         }
         retriableMkDirs(getDestFs(), entry.getValue().getParent(), streamName);
+        publishMissingPartitions(entry.getValue(), streamName);
         if (retriableRename(getDestFs(), entry.getKey().getPath(),
             entry.getValue(), streamName) == false) {
           LOG.warn("Failed to rename.Aborting transaction COMMIT to avoid "
