@@ -165,6 +165,9 @@ public class LocalStreamService extends AbstractService implements
       try {
         List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
             Conduit.getHcatDBName(), getTableName(stream));
+        if (hCatPartitionList.isEmpty()) {
+          continue;
+        }
         Collections.sort(hCatPartitionList, new HCatPartitionComparator());
         HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
         Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
@@ -204,9 +207,20 @@ public class LocalStreamService extends AbstractService implements
       return;
     }
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
-    if (lastAddedTime == -1) {
+    if (lastAddedTime == -1 /* && successPrepareList*/) {
       lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
       return;
+    } else if (lastAddedTime == -1 /*&& !successprepareList*/) {
+      /*
+       * try {
+       * // getPartitions and find last partition
+       * } catch (Exception e) {
+       * LOG.warn();
+       * return;
+       * }
+       */
+      
+      
     }
     long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
      if (isMissingPartitions(commitTime, nextPartitionTime)) {
