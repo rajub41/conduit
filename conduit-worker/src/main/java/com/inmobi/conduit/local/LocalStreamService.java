@@ -36,6 +36,7 @@ import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.ConfigConstants;
+import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.HCatPartitionComparator;
 
@@ -95,7 +96,9 @@ public class LocalStreamService extends AbstractService implements
   private boolean processLastFile = false;
   private int numberOfFilesProcessed = 0;
   private final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
-  private static final String TABLE_PREFIX = "LOCAL";
+  private static final String TABLE_PREFIX = "CONDUIT_LOCAL";
+  private Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
+  private boolean failedTogetPartitions = false;
 
   // The amount of data expected to be processed by each mapper, such that
   // each map task completes within ~20 seconds. This calculation is based
@@ -159,30 +162,60 @@ public class LocalStreamService extends AbstractService implements
     
   }
 
-  private void prepareLastAddedPartitionMap() throws InterruptedException {
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+   // TODO re-factor this method name if required
+    prepareStreamHcatEnableMap();
+
     HCatClient hcatClient = Conduit.getHCatClient();
+   
     for (String stream : streamsToProcess) {
-      try {
-        List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
-            Conduit.getHcatDBName(), getTableName(stream));
-        if (hCatPartitionList.isEmpty()) {
-          continue;
+      if (streamHcatEnableMap.get(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          failedTogetPartitions = true;
+          e.printStackTrace();
         }
-        Collections.sort(hCatPartitionList, new HCatPartitionComparator());
-        HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
-        Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
-            lastHcatPartition.getLocation(), stream);
-        if (lastAddedPartitionDate != null) {
-          lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
-        } else {
-          // if there are no partitions in the hcatalog table then it should create partitions from current time
-          lastAddedPartitionMap.put(stream, (long) -1);
-        }
-      } catch (HCatException e) {
-        e.printStackTrace();
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
       }
     }
-    
+    Conduit.submitBack(hcatClient);
+  }
+
+  private void findLastPartition(HCatClient hcatClient, String stream)
+      throws HCatException {
+    List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
+        Conduit.getHcatDBName(), getTableName(stream));
+    if (hCatPartitionList.isEmpty()) {
+      LOG.info("No partitions present for " + stream + " stream ");
+      //continue;
+    }
+    Collections.sort(hCatPartitionList, new HCatPartitionComparator());
+    HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
+    Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
+        lastHcatPartition.getLocation(), stream);
+    if (lastAddedPartitionDate != null) {
+      lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+    } else {
+      // if there are no partitions in the hcatalog table then it should create partitions from current time
+      lastAddedPartitionMap.put(stream, (long) -1);
+    }
+  }
+
+  private void prepareStreamHcatEnableMap() {
+    Map<String, SourceStream> sourceStreamMap = config.getSourceStreams();
+    for (String stream : streamsToProcess) {
+      if (sourceStreamMap.containsKey(stream)
+          && sourceStreamMap.get(stream).isHCatEnabled()) {
+        streamHcatEnableMap.put(stream, true);
+      } else {
+        streamHcatEnableMap.put(stream, false);
+      }
+    }
   }
 
   private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
@@ -200,46 +233,57 @@ public class LocalStreamService extends AbstractService implements
     return sb.toString();
   }
 
-  private void publishMissingPartitions(long commitTime, String streamName) {
-    if (config.getSourceStreams().containsKey(streamName)
+  private void publishMissingPartitions(long commitTime, String streamName)
+      throws InterruptedException {
+    /*if (config.getSourceStreams().containsKey(streamName)
         && !config.getSourceStreams().get(streamName).isHCatEnabled()) {
       //TODO add LOG or fix it properly
       return;
-    }
+    }*/
+    HCatClient hcatClient = Conduit.getHCatClient();
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
-    if (lastAddedTime == -1 /* && successPrepareList*/) {
-      lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
-      return;
-    } else if (lastAddedTime == -1 /*&& !successprepareList*/) {
-      /*
-       * try {
-       * // getPartitions and find last partition
-       * } catch (Exception e) {
-       * LOG.warn();
-       * return;
-       * }
-       */
-      
-      
+    if (lastAddedTime == -1) {
+      if (!failedTogetPartitions) {
+        lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+        return;
+      } else {
+        // TODO 
+        try {
+          findLastPartition(hcatClient, streamName);
+          lastAddedTime = lastAddedPartitionMap.get(streamName);
+          if (lastAddedTime == -1) {
+            lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+            return;
+          }
+        } catch (HCatException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+          return;
+        }
+      }
     }
     long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
-     if (isMissingPartitions(commitTime, nextPartitionTime)) {
-       LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
-       while (isMissingPartitions(commitTime, nextPartitionTime)) {
-         String missingPartition = Cluster.getDestDir(
-             srcCluster.getLocalFinalDestDirRoot(), streamName, nextPartitionTime);
-         try {
+    if (isMissingPartitions(commitTime, nextPartitionTime)) {
+      LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
+      while (isMissingPartitions(commitTime, nextPartitionTime)) {
+        String missingPartition = Cluster.getDestDir(
+            srcCluster.getLocalFinalDestDirRoot(), streamName, nextPartitionTime);
+        try {
           addPartition(missingPartition, streamName, nextPartitionTime,
               getTableName(streamName));
+          lastAddedPartitionMap.put(streamName, nextPartitionTime);
+          nextPartitionTime = nextPartitionTime + MILLISECONDS_IN_MINUTE;
         } catch (InterruptedException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
+          break;
         } catch (ParseException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
+          break;
         }
-       }
-     }
+      }
+    }
   }
 
   public void addPartition(String location, String streamName,

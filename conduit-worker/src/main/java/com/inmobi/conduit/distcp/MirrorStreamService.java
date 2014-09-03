@@ -84,7 +84,7 @@ public class MirrorStreamService extends DistcpBaseService {
   }
 
 
-  private void prepareLastAddedPartitionMap() throws InterruptedException {
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
     HCatClient hcatClient = Conduit.getHCatClient();
     for (String stream : streamsToProcess) {
       try {

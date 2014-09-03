@@ -239,9 +239,23 @@ public class Conduit implements Service, ConduitConstants {
       //Start a purger per cluster
       services.add(new DataPurgerService(config, cluster));
     }
+    if (isHCatEnabled) {
     // TODO change name is required
     ParseAndCreateHCatClients();
+    prepareLastAddedPartitions();
+    }
     return services;
+  }
+
+  private void prepareLastAddedPartitions() {
+    for (AbstractService service : services) {
+      try {
+        service.prepareLastAddedPartitionMap();
+      } catch (InterruptedException e) {
+        // TODO check what to do with interrupted exception and others
+        e.printStackTrace();
+      }
+    }
   }
 
   private void ParseAndCreateHCatClients() throws Exception {

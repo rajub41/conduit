@@ -86,8 +86,8 @@ public class MergedStreamService extends DistcpBaseService {
     }
   }
 
-  private void prepareLastAddedPartitionMap() throws InterruptedException {
-    HCatClient hcatClient = Conduit.getHCatClient();
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    /*HCatClient hcatClient = Conduit.getHCatClient();
     for (String stream : streamsToProcess) {
       try {
         List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
@@ -102,7 +102,7 @@ public class MergedStreamService extends DistcpBaseService {
       } catch (HCatException e) {
         e.printStackTrace();
       }
-    }
+    }*/
     
   }
 

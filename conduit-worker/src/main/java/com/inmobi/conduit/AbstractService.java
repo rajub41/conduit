@@ -29,6 +29,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import com.inmobi.conduit.utils.CalendarHelper;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -135,6 +136,8 @@ public abstract class AbstractService implements Service, Runnable {
   }
 
   public abstract long getMSecondsTillNextRun(long currentTime);
+  
+  public abstract void prepareLastAddedPartitionMap() throws InterruptedException;
 
   protected abstract void execute() throws Exception;
 
