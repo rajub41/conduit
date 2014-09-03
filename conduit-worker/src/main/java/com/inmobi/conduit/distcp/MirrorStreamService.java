@@ -85,7 +85,7 @@ public class MirrorStreamService extends DistcpBaseService {
 
 
   public void prepareLastAddedPartitionMap() throws InterruptedException {
-    HCatClient hcatClient = Conduit.getHCatClient();
+   /* HCatClient hcatClient = Conduit.getHCatClient();
     for (String stream : streamsToProcess) {
       try {
         List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
@@ -101,7 +101,7 @@ public class MirrorStreamService extends DistcpBaseService {
         e.printStackTrace();
       }
     }
-    
+    */
   }
 
   private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
@@ -276,7 +276,7 @@ public class MirrorStreamService extends DistcpBaseService {
       String streamName = getTopicNameFromDestnPath(entry.getValue());
       if (entry.getKey().isDir()) {
         retriableMkDirs(getDestFs(), entry.getValue(), streamName);
-        publishMissingPartitions(entry.getValue(), streamName);
+        //publishMissingPartitions(entry.getValue(), streamName);
         ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
             streamName, 1);
       } else {
@@ -286,7 +286,7 @@ public class MirrorStreamService extends DistcpBaseService {
           continue;
         }
         retriableMkDirs(getDestFs(), entry.getValue().getParent(), streamName);
-        publishMissingPartitions(entry.getValue(), streamName);
+        //publishMissingPartitions(entry.getValue(), streamName);
         if (retriableRename(getDestFs(), entry.getKey().getPath(),
             entry.getValue(), streamName) == false) {
           LOG.warn("Failed to rename.Aborting transaction COMMIT to avoid "

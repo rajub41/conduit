@@ -404,7 +404,7 @@ public class DataPurgerService extends AbstractService {
     if (partitions != null) {
       partitions.add(partSpec);
     } else {
-     partitions = new TreeSet<Map<String, String>>();
+     partitions = new HashSet<Map<String, String>>();
      partitions.add(partSpec);
     }
     partitionsToPurge.put(tableName, partitions);
@@ -503,5 +503,11 @@ public class DataPurgerService extends AbstractService {
    */
   public String getServiceType(){
     return "DataPurgerService";
+  }
+
+  @Override
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    // TODO Auto-generated method stub
+    
   }
 }

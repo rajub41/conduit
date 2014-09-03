@@ -32,11 +32,14 @@ import com.inmobi.conduit.CheckpointProvider;
 import com.inmobi.conduit.Cluster;
 import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
+import com.inmobi.conduit.DestinationStream;
+import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.DatePathComparator;
 import com.inmobi.conduit.utils.FileUtil;
 import com.inmobi.conduit.utils.HCatPartitionComparator;
 
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -60,6 +63,8 @@ public class MergedStreamService extends DistcpBaseService {
 
   private static final Log LOG = LogFactory.getLog(MergedStreamService.class);
   private static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
+  private static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
+  private static boolean failedTogetPartitions = false;
 
 
   public MergedStreamService(ConduitConfig config, Cluster srcCluster,
@@ -86,7 +91,40 @@ public class MergedStreamService extends DistcpBaseService {
     }
   }
 
+  private void prepareStreamHcatEnableMap() {
+    Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
+    for (String stream : streamsToProcess) {
+      if (destStreamMap.containsKey(stream)
+          && destStreamMap.get(stream).isHCatEnabled()) {
+        streamHcatEnableMap.put(stream, true);
+      } else {
+        streamHcatEnableMap.put(stream, false);
+      }
+    }
+  }
+  
   public void prepareLastAddedPartitionMap() throws InterruptedException {
+ // TODO re-factor this method name if required
+    prepareStreamHcatEnableMap();
+
+    HCatClient hcatClient = Conduit.getHCatClient();
+   
+    for (String stream : streamsToProcess) {
+      if (streamHcatEnableMap.get(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          failedTogetPartitions = true;
+          e.printStackTrace();
+        }
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
+      }
+    }
+    Conduit.submitBack(hcatClient);
     /*HCatClient hcatClient = Conduit.getHCatClient();
     for (String stream : streamsToProcess) {
       try {
@@ -114,6 +152,26 @@ public class MergedStreamService extends DistcpBaseService {
   }
 
 
+  private void findLastPartition(HCatClient hcatClient, String stream)
+      throws HCatException {
+    List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
+        Conduit.getHcatDBName(), getTableName(stream));
+    if (hCatPartitionList.isEmpty()) {
+      LOG.info("No partitions present for " + stream + " stream ");
+      //continue;
+    }
+    Collections.sort(hCatPartitionList, new HCatPartitionComparator());
+    HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
+    Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
+        lastHcatPartition.getLocation(), stream);
+    if (lastAddedPartitionDate != null) {
+      lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+    } else {
+      // if there are no partitions in the hcatalog table then it should create partitions from current time
+      lastAddedPartitionMap.put(stream, (long) -1);
+    }
+  }
+
   private String getTableName(String streamName) {
     StringBuilder sb = new StringBuilder();
     sb.append(TABLE_PREFIX);
@@ -123,13 +181,55 @@ public class MergedStreamService extends DistcpBaseService {
   }
 
 
-  private void publishMissingPartitions(long commitTime, String streamName) {
+  private void publishMissingPartitions(long commitTime, String streamName)
+      throws InterruptedException {
     if (destCluster.getDestinationStreams().containsKey(streamName)
         && !destCluster.getDestinationStreams().get(streamName).isHCatEnabled()) {
      //TODO add log  or properly fix it here
       return;
     }
+    HCatClient hcatClient = Conduit.getHCatClient();
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
+    if (lastAddedTime == -1) {
+      if (!failedTogetPartitions) {
+        lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+        return;
+      } else {
+        // TODO 
+        try {
+          findLastPartition(hcatClient, streamName);
+          lastAddedTime = lastAddedPartitionMap.get(streamName);
+          if (lastAddedTime == -1) {
+            lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+            return;
+          }
+        } catch (HCatException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+          return;
+        }
+      }
+    }
+    long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
+    if (isMissingPartitions(commitTime, nextPartitionTime)) {
+      LOG.debug("Last added partition : [" + getLogDateString(lastAddedTime) + "]");
+      while (isMissingPartitions(commitTime, nextPartitionTime)) {
+        String missingPartition = Cluster.getDestDir(
+            srcCluster.getLocalFinalDestDirRoot(), streamName, nextPartitionTime);
+        try {
+          addPartition(missingPartition, streamName, nextPartitionTime,
+              getTableName(streamName));
+          lastAddedPartitionMap.put(streamName, nextPartitionTime);
+          nextPartitionTime = nextPartitionTime + MILLISECONDS_IN_MINUTE;
+        } catch (InterruptedException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+          break;
+        }
+      }
+    }
+
+   /* long lastAddedTime = lastAddedPartitionMap.get(streamName);
     if (lastAddedTime == -1) {
       lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
       return;
@@ -149,7 +249,7 @@ public class MergedStreamService extends DistcpBaseService {
         }
        }
      }
-  }
+*/  }
 
   public void addPartition(String location, String streamName,
       long partTimeStamp, String tableName) throws InterruptedException {
