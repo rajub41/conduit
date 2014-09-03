@@ -65,9 +65,11 @@ public class Conduit implements Service, ConduitConstants {
   private volatile boolean initFailed = false;
   private CuratorLeaderManager curatorLeaderManager = null;
   private volatile boolean conduitStarted = false;
+ 
   private static boolean isHCatEnabled = false;
   private static String hcatDBName = null;
   private static int numOfHCatClients = 10;
+  //private static String numOfHCatClientsRatio = "1/5";
   private static HCatClientUtil hcatUtil = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
@@ -103,6 +105,10 @@ public class Conduit implements Service, ConduitConstants {
 
   public static void setHcatDBName(String hcatDBName) {
     Conduit.hcatDBName = hcatDBName;
+  }
+
+  public static boolean isHCatEnabled() {
+    return isHCatEnabled;
   }
 
   protected List<AbstractService> init() throws Exception {
@@ -233,7 +239,35 @@ public class Conduit implements Service, ConduitConstants {
       //Start a purger per cluster
       services.add(new DataPurgerService(config, cluster));
     }
+    // TODO change name is required
+    ParseAndCreateHCatClients();
     return services;
+  }
+
+  private void ParseAndCreateHCatClients() throws Exception {
+    if (isHCatEnabled) {
+      HiveConf conf = new HiveConf();
+      String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
+      if (metastoreUrl == null) {
+        throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
+      }
+      try {
+        String numOfHCatClientsRatio = System.getProperty(NUM_OF_HCAT_CLIENTS_RATIO, "1/5");
+        String ratio = numOfHCatClientsRatio.split("/")[1];
+        int size = services.size();
+        if (size > 0 && Integer.parseInt(ratio) > 0) {
+          numOfHCatClients = (size / Integer.parseInt(ratio));
+          if (numOfHCatClients <= 0) {
+            numOfHCatClients = 10;
+          }
+        }
+      } catch(Exception e) {
+        LOG.error("Exception occured  while calcluating the number"
+            + " of hcatClients ", e);
+        numOfHCatClients = 10;
+      }
+      createHCatClients(metastoreUrl);
+    }
   }
 
   private void copyInputFormatJarToClusterFS(Cluster cluster, 
@@ -302,13 +336,15 @@ public class Conduit implements Service, ConduitConstants {
     hcatUtil.submitBack(hCatClient);
   }
 
-  private static void createHCatClients(String metastoreUrl) {
+  private static void createHCatClients(String metastoreUrl) throws Exception {
     try {
       hcatUtil = new HCatClientUtil(metastoreUrl);
       hcatUtil.createHCatClients(numOfHCatClients);
     } catch (Exception e) {
+      LOG.error("Got exception while creatig hcat clients ", e);
+      throw e;
       // TODO Auto-generated catch block
-      e.printStackTrace();
+     // e.printStackTrace();
     }
   }
 
@@ -527,7 +563,7 @@ public class Conduit implements Service, ConduitConstants {
         if (metastoreUrl == null) {
           throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
         }
-        createHCatClients(metastoreUrl);
+        //createHCatClients(metastoreUrl);
       } else {
         LOG.info("HCAT is not enabled for the worker ");
       }
@@ -603,13 +639,13 @@ public class Conduit implements Service, ConduitConstants {
       throw new RuntimeException("HCAT DataBase name is not specified"
           + " in the conduit config file");
     }
-    String numHCatClients = prop.getProperty(NUM_OF_HCAT_CLIENTS);
-    if (numHCatClients != null) {
-      LOG.info("number of HCatClients configured " + numHCatClients);
-      numOfHCatClients = Integer.parseInt(numHCatClients);
+    String numHCatClientsRatio = prop.getProperty(NUM_OF_HCAT_CLIENTS_RATIO);
+    if (numHCatClientsRatio != null) {
+      System.setProperty(NUM_OF_HCAT_CLIENTS_RATIO, numHCatClientsRatio);
+      LOG.info("ratio of HcatCleints is  configured " + numHCatClientsRatio);
     } else {
-      LOG.info("Number of HcatClients is not configured. Create "
-          + numOfHCatClients + " HCatCleints");
+      /*LOG.info("Number of HcatClients is not configured. Create "
+          + numOfHCatClientsRatio + " HCatCleints");*/
     }
   }
 
