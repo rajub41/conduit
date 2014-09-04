@@ -437,7 +437,7 @@ public class DataPurgerService extends AbstractService {
   private void purge() {
     //TODO ***** do hcat operations only if hcatalog is enabled
     // get the hcatClient
-    HCatClient hcatClient = null;
+    /*HCatClient hcatClient = null;
     try {
       hcatClient = Conduit.getHCatClient();
     } catch (InterruptedException e1) {
@@ -458,6 +458,8 @@ public class DataPurgerService extends AbstractService {
         }
       }
     }
+   */
+    
     Iterator it = streamsToPurge.iterator();
     Path purgePath = null;
     while (it.hasNext()) {

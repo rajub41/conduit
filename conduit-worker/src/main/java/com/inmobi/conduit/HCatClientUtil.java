@@ -39,7 +39,9 @@ public class HCatClientUtil {
     for (int i = 0; i < numOfHCatClients; i++) {
       HCatClient hcatClient = HCatClient.create(hcatConf);
       buffer.put(hcatClient);
+      LOG.info("HCatClient is created " + hcatClient);
     }
+    LOG.info("Total number of hcat cleints are " + buffer.size());;
   }
 
   public HCatClient getHCatClient() throws InterruptedException {

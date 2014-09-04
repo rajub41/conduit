@@ -191,8 +191,11 @@ public class LocalStreamService extends AbstractService implements
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
         Conduit.getHcatDBName(), getTableName(stream));
     if (hCatPartitionList.isEmpty()) {
-      LOG.info("No partitions present for " + stream + " stream ");
+      LOG.info("No partitions present for " + stream + " streammm ");
+      return;
       //continue;
+    } else {
+      LOG.info("AAAAAAAAAAAAAAA list of partitions for finding last " + hCatPartitionList + "   size: " + hCatPartitionList.size());
     }
     Collections.sort(hCatPartitionList, new HCatPartitionComparator());
     HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);

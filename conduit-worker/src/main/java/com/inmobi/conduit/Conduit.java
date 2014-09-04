@@ -265,6 +265,7 @@ public class Conduit implements Service, ConduitConstants {
       if (metastoreUrl == null) {
         throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
       }
+      LOG.info("AAAAAAAAAAAAAAAAA provied metastore uri is : " + metastoreUrl);
       try {
         String numOfHCatClientsRatio = System.getProperty(NUM_OF_HCAT_CLIENTS_RATIO, "1/5");
         String ratio = numOfHCatClientsRatio.split("/")[1];
@@ -274,6 +275,8 @@ public class Conduit implements Service, ConduitConstants {
           if (numOfHCatClients <= 0) {
             numOfHCatClients = 10;
           }
+        } else {
+          LOG.info("AAAAAAAA no services or ratio is invalid");
         }
       } catch(Exception e) {
         LOG.error("Exception occured  while calcluating the number"
@@ -353,6 +356,7 @@ public class Conduit implements Service, ConduitConstants {
   private static void createHCatClients(String metastoreUrl) throws Exception {
     try {
       hcatUtil = new HCatClientUtil(metastoreUrl);
+      LOG.info("Going to create HCAT CLIENTS now ");
       hcatUtil.createHCatClients(numOfHCatClients);
     } catch (Exception e) {
       LOG.error("Got exception while creatig hcat clients ", e);
