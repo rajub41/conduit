@@ -328,12 +328,16 @@ public abstract class AbstractService implements Service, Runnable {
         }
       }
     }
-    //publishMissingPartitions(commitTime, categoryName);
+    
+    publishMissingPartitions(commitTime, categoryName);
     // 
     // prevRuntimeForCategory map is updated with commitTime,
     // even if prevRuntime is -1, since service did run at this point
     prevRuntimeForCategory.put(categoryName, commitTime);
   }
+
+  public abstract void publishMissingPartitions(long commitTime, String categoryName) throws InterruptedException;
+    // TODO Auto-generated method stub
 
   /*
    * Retries renaming a file to a given num of times defined by

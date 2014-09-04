@@ -549,4 +549,12 @@ public class MirrorStreamService extends DistcpBaseService {
   public String getServiceType() {
     return "MirrorStreamService";
   }
+
+
+  @Override
+  public void publishMissingPartitions(long commitTime, String categoryName)
+      throws InterruptedException {
+    // TODO Auto-generated method stub
+    
+  }
 }

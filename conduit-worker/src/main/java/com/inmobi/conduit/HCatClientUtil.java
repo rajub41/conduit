@@ -46,7 +46,8 @@ public class HCatClientUtil {
 
   public HCatClient getHCatClient() throws InterruptedException {
     if (buffer != null) {
-      return buffer.poll(20, TimeUnit.SECONDS);
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA buffer size : " + buffer.size());
+      return buffer.poll(60, TimeUnit.SECONDS);
     } else {
       return null;
     }
@@ -54,7 +55,9 @@ public class HCatClientUtil {
 
   public void submitBack(HCatClient hcatClient) throws InterruptedException {
     if (buffer != null) {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAa submitting back : " + buffer.size());
       buffer.offer(hcatClient);
+      LOG.info("AAAAAAAAAAAAAAAAAAAAa after submission : " + buffer.size());
     }
   }
 

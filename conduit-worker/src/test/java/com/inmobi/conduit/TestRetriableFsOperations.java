@@ -155,4 +155,11 @@ public class TestRetriableFsOperations extends AbstractService {
     // TODO Auto-generated method stub
     
   }
+
+  @Override
+  public void publishMissingPartitions(long commitTime, String categoryName)
+      throws InterruptedException {
+    // TODO Auto-generated method stub
+    
+  }
 }
