@@ -347,6 +347,10 @@ public abstract class AbstractService implements Service, Runnable {
   public boolean addPartition(String location, String streamName,
       long partTimeStamp, String tableName, HCatClient hcatClient)
           throws InterruptedException, ParseException {
+    if (hcatClient == null) {
+      LOG.warn("Did not get hcatcleint for table " + tableName);
+      return false;
+    }
     String dbName = Conduit.getHcatDBName();
     String dateStr = Cluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
     String [] dateSplits = dateStr.split(File.separator);
@@ -358,27 +362,28 @@ public abstract class AbstractService implements Service, Runnable {
       partSpec.put("hour", dateSplits[3]);
       partSpec.put("minute", dateSplits[4]);
     }
-    try {
-      LOG.info("AAAAAAAAAAAAAAAAAA going to create parititons : " + partSpec + "    table name : " + tableName + "   location " + location);
-      HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(dbName,
-          tableName, location, partSpec).build();
-      if (hcatClient != null) {
+    HCatAddPartitionDesc partInfo = null;
+    int failedCount = 0;
+    while (failedCount < numOfRetries) {
+      try {
+        if (partInfo == null) {
+          partInfo = HCatAddPartitionDesc.create(dbName, tableName, location,
+              partSpec).build();
+        }
         hcatClient.addPartition(partInfo);
-      } else {
-        LOG.warn("AAAAAAAAAAAAAAAAAAAa did not get hcatcleint " + hcatClient);
-        return false;
-      }
-      LOG.info("AAAAAAAAAAAAAAAAAAAA  partition is added successfully : " + partInfo);
-      return true;
-    } catch (HCatException e) {
-      if (e.getCause() instanceof AlreadyExistsException) {
-        LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAa already exists ", e);
+        LOG.info("  partition is added successfully : " + partInfo);
         return true;
+      } catch (HCatException e) {
+        if (e.getCause() instanceof AlreadyExistsException) {
+          LOG.info("partition " + partInfo + " already exists ", e);
+          return true;
+        }
+        failedCount++;
+        LOG.info("Got Exception while trying to add partition  : " + partInfo
+            + ". Exception ", e);
       }
-      LOG.info("AAAAAAAAAAAAAAAAAAAA  partition is not added : ", e);
-      e.printStackTrace();
-      return false;
     }
+    return false;
   }
 
   /*
