@@ -260,7 +260,7 @@ public class MergedStreamService extends DistcpBaseService {
   }
 
 
-  public void publishMissingPartitions(long commitTime, String streamName)
+  public void publishPartitions(long commitTime, String streamName)
       throws InterruptedException {
     if (destCluster.getDestinationStreams().containsKey(streamName)
         && !destCluster.getDestinationStreams().get(streamName).isHCatEnabled()) {
@@ -325,43 +325,6 @@ public class MergedStreamService extends DistcpBaseService {
       if (hcatClient != null) {
         Conduit.submitBack(hcatClient);
       }
-    }
-  }
-
-  public boolean addPartition(String location, String streamName,
-      long partTimeStamp, String tableName, HCatClient hcatClient) throws InterruptedException {
-    String dbName = Conduit.getHcatDBName();
-    String dateStr = Cluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
-    String [] dateSplits = dateStr.split(File.separator);
-    Map<String, String> partSpec = new HashMap<String, String>();
-    if (dateSplits.length == 5) {
-      partSpec.put("year", dateSplits[0]);
-      partSpec.put("month", dateSplits[1]);
-      partSpec.put("day", dateSplits[2]);
-      partSpec.put("hour", dateSplits[3]);
-      partSpec.put("minute", dateSplits[4]);
-    }
-    try {
-      LOG.info("AAAAAAAAAAAAAAAAAA going to create parititons : " + partSpec + "    table name : " + tableName + "   location " + location);
-      HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(dbName,
-          tableName, location, partSpec).build();
-      if (hcatClient != null) {
-        hcatClient.addPartition(partInfo);
-      } else {
-        LOG.warn("AAAAAAAAAAAAAAAAAAAa did not get hcatcleint " + hcatClient);
-        return false;
-      }
-      LOG.info("AAAAAAAAAAAAAAAAAAAA  partition is added successfully : " + partInfo);
-      return true;
-    } catch (HCatException e) {
-      if (e.getCause() instanceof AlreadyExistsException) {
-        LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAa already exists ", e);
-        return true;
-      }
-      LOG.error("AAAAAAAAAAAAAAAAAAAAA exception occured while adding the partition", e);
-
-      e.printStackTrace();
-      return false;
     }
   }
 

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,6 +38,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
+import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
+import org.apache.hive.hcatalog.api.HCatClient;
+import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.thrift.TSerializer;
 
 import com.google.common.collect.HashBasedTable;
@@ -336,8 +341,45 @@ public abstract class AbstractService implements Service, Runnable {
     prevRuntimeForCategory.put(categoryName, commitTime);
   }
 
-  public abstract void publishMissingPartitions(long commitTime, String categoryName) throws InterruptedException;
-    // TODO Auto-generated method stub
+  public abstract void publishMissingPartitions(long commitTime,
+      String categoryName) throws InterruptedException;
+
+  public boolean addPartition(String location, String streamName,
+      long partTimeStamp, String tableName, HCatClient hcatClient)
+          throws InterruptedException, ParseException {
+    String dbName = Conduit.getHcatDBName();
+    String dateStr = Cluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
+    String [] dateSplits = dateStr.split(File.separator);
+    Map<String, String> partSpec = new HashMap<String, String>();
+    if (dateSplits.length == 5) {
+      partSpec.put("year", dateSplits[0]);
+      partSpec.put("month", dateSplits[1]);
+      partSpec.put("day", dateSplits[2]);
+      partSpec.put("hour", dateSplits[3]);
+      partSpec.put("minute", dateSplits[4]);
+    }
+    try {
+      LOG.info("AAAAAAAAAAAAAAAAAA going to create parititons : " + partSpec + "    table name : " + tableName + "   location " + location);
+      HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(dbName,
+          tableName, location, partSpec).build();
+      if (hcatClient != null) {
+        hcatClient.addPartition(partInfo);
+      } else {
+        LOG.warn("AAAAAAAAAAAAAAAAAAAa did not get hcatcleint " + hcatClient);
+        return false;
+      }
+      LOG.info("AAAAAAAAAAAAAAAAAAAA  partition is added successfully : " + partInfo);
+      return true;
+    } catch (HCatException e) {
+      if (e.getCause() instanceof AlreadyExistsException) {
+        LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAa already exists ", e);
+        return true;
+      }
+      LOG.info("AAAAAAAAAAAAAAAAAAAA  partition is not added : ", e);
+      e.printStackTrace();
+      return false;
+    }
+  }
 
   /*
    * Retries renaming a file to a given num of times defined by
@@ -539,6 +581,7 @@ public abstract class AbstractService implements Service, Runnable {
       }
     }
   }
+
   /**
    * Get the service name from the name
    */

@@ -120,27 +120,13 @@ public class MirrorStreamService extends DistcpBaseService {
     return sb.toString();
   }
 
-
-  private void publishMissingPartitions(Path destPath, String streamName) {
+  private void publishPartitions(Path destPath, String streamName)
+      throws InterruptedException {
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
-    /*long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
-     if (isMissingPartitions(commitTime, nextPartitionTime)) {
-       LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
-       while (isMissingPartitions(commitTime, nextPartitionTime)) {
-         String missingPartition = Cluster.getDestDir(
-             destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
-         try {
-          addPartition(missingPartition, streamName, nextPartitionTime,
-              getTableName(streamName));
-        } catch (InterruptedException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
-       }
-     }*/
     Path streamDirPrefix = new Path(destCluster.getFinalDestDirRoot(), streamName);
     Date fileTimeStamp = CalendarHelper.getDateFromStreamDir(streamDirPrefix, destPath);
     long nextPartitionTime = fileTimeStamp.getTime() - MILLISECONDS_IN_MINUTE;
+    HCatClient hcatClient = Conduit.getHCatClient();
     if (lastAddedTime >= nextPartitionTime) {
       return;
     } else {
@@ -148,42 +134,11 @@ public class MirrorStreamService extends DistcpBaseService {
           destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
       try {
         addPartition(missingPartition, streamName, nextPartitionTime,
-            getTableName(streamName));
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
+            getTableName(streamName), hcatClient);
+      } catch (Exception e) {
         e.printStackTrace();
       }
       lastAddedPartitionMap.put(streamName, nextPartitionTime);
-    }
-  }
-
-  public void addPartition(String location, String streamName,
-      long partTimeStamp, String tableName) throws InterruptedException {
-    // parameters --> location, streamName and tableName
-    // get DB from Conduit
-    // getTableName for a given stream   -----
-    // construct partSpec
-    //addPartition
-    String dbName = Conduit.getHcatDBName();
-    HCatClient hcatClient = Conduit.getHCatClient();
-   /* String tableName = config.getSourceStreams().get(streamName).getTableName(
-        srcCluster.getName());*/
-    String dateStr = Cluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
-    String [] dateSplits = dateStr.split(File.separator);
-    Map<String, String> partSpec = new HashMap<String, String>();
-    if (dateSplits.length == 5) {
-      partSpec.put("year", dateSplits[0]);
-      partSpec.put("month", dateSplits[1]);
-      partSpec.put("day", dateSplits[2]);
-      partSpec.put("hour", dateSplits[3]);
-      partSpec.put("minute", dateSplits[4]);
-    }
-    try {
-      HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(dbName,
-          tableName, location, partSpec).build();
-      hcatClient.addPartition(partInfo);
-    } catch (HCatException e) {
-      e.printStackTrace();
     }
   }
 
@@ -276,7 +231,7 @@ public class MirrorStreamService extends DistcpBaseService {
       String streamName = getTopicNameFromDestnPath(entry.getValue());
       if (entry.getKey().isDir()) {
         retriableMkDirs(getDestFs(), entry.getValue(), streamName);
-        //publishMissingPartitions(entry.getValue(), streamName);
+        //publishPartitions(entry.getValue(), streamName);
         ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
             streamName, 1);
       } else {
@@ -286,7 +241,7 @@ public class MirrorStreamService extends DistcpBaseService {
           continue;
         }
         retriableMkDirs(getDestFs(), entry.getValue().getParent(), streamName);
-        //publishMissingPartitions(entry.getValue(), streamName);
+        //publishPartitions(entry.getValue(), streamName);
         if (retriableRename(getDestFs(), entry.getKey().getPath(),
             entry.getValue(), streamName) == false) {
           LOG.warn("Failed to rename.Aborting transaction COMMIT to avoid "
