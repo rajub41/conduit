@@ -235,7 +235,23 @@ public class Conduit implements Service, ConduitConstants {
       //Start a purger per cluster
       services.add(new DataPurgerService(config, cluster));
     }
+    if (isHCatEnabled) {
+      // TODO change name is required
+      ParseAndCreateHCatClients();
+      prepareLastAddedPartitions();
+    }
     return services;
+  }
+
+  private void prepareLastAddedPartitions() {
+    for (AbstractService service : services) {
+      try {
+        service.prepareLastAddedPartitionMap();
+      } catch (InterruptedException e) {
+        // TODO check what to do with interrupted exception and others
+        e.printStackTrace();
+      }
+    }
   }
 
   private void copyInputFormatJarToClusterFS(Cluster cluster, 
@@ -294,6 +310,57 @@ public class Conduit implements Service, ConduitConstants {
         new FSCheckpointProvider(dstCluster.getCheckpointDir()),
         streamsToProcess);
 
+  }
+
+  private void ParseAndCreateHCatClients() throws Exception {
+    if (isHCatEnabled) {
+      HiveConf conf = new HiveConf();
+      String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
+      if (metastoreUrl == null) {
+        throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
+      }
+      LOG.info("hive metastore uri is : " + metastoreUrl);
+      try {
+        String hcatCientsRaio = System.getProperty(HCAT_CLIENTS_RATIO, "1/5");
+        String ratioStr = hcatCientsRaio.split("/")[1];
+        int numServices = services.size();
+        int ratio = Integer.parseInt(ratioStr);
+        if (numServices > 0 && ratio > 0) {
+          numOfHCatClients = (numServices / ratio);
+          if (numOfHCatClients <= 0) {
+            numOfHCatClients = 1;
+          }
+        } else {
+          LOG.info("AAAAAAAA no services or ratio is invalid");
+        }
+      } catch(Exception e) {
+        LOG.error("Exception occured  while calcluating the number"
+            + " of hcatClients ", e);
+        numOfHCatClients = 10;
+      }
+      createHCatClients(metastoreUrl);
+    }
+  }
+
+  private static void createHCatClients(String metastoreUrl) throws Exception {
+    try {
+      hcatUtil = new HCatClientUtil(metastoreUrl);
+      LOG.info("Going to create HCAT CLIENTS now ");
+      hcatUtil.createHCatClients(numOfHCatClients);
+    } catch (Exception e) {
+      LOG.error("Got exception while creatig hcat clients ", e);
+      throw e;
+      // TODO Auto-generated catch block
+     // e.printStackTrace();
+    }
+  }
+
+  public static HCatClient getHCatClient() throws InterruptedException {
+    return hcatUtil.getHCatClient();
+  }
+
+  public static void submitBack(HCatClient hCatClient) throws InterruptedException {
+    hcatUtil.submitBack(hCatClient);
   }
 
   @Override
