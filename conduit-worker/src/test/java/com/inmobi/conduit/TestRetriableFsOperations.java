@@ -149,4 +149,17 @@ public class TestRetriableFsOperations extends AbstractService {
   protected String getTier() {
     return null;
   }
+
+  @Override
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void publishMissingPartitions(long commitTime, String categoryName)
+      throws InterruptedException {
+    // TODO Auto-generated method stub
+    
+  }
 }

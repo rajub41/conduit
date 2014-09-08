@@ -305,14 +305,14 @@ public class LocalStreamServiceTest extends TestMiniClusterUtil {
     sourcestreams.put("cluster1", new Integer(retentioninhours));
 
     Map<String, SourceStream> streamMap = new HashMap<String, SourceStream>();
-    streamMap.put("stream1", new SourceStream("stream1", sourcestreams));
+    streamMap.put("stream1", new SourceStream("stream1", sourcestreams, false));
 
     sourcestreams.clear();
 
     Map<String, DestinationStream> deststreamMap = new HashMap<String, DestinationStream>();
     deststreamMap.put("stream1",
         new DestinationStream("stream1", Integer.parseInt(retentioninhours),
-            Boolean.TRUE));
+            Boolean.TRUE, false));
 
     sourcestreams.clear();
 
