@@ -483,7 +483,7 @@ public class DataPurgerService extends AbstractService {
   }
 
   @Override
-  public void publishMissingPartitions(long commitTime, String categoryName)
+  public void publishPartitions(long commitTime, String categoryName)
       throws InterruptedException {
     // TODO Auto-generated method stub
     

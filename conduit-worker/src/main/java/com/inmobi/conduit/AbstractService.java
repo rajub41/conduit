@@ -334,14 +334,13 @@ public abstract class AbstractService implements Service, Runnable {
       }
     }
     
-    publishMissingPartitions(commitTime, categoryName);
-    // 
+    publishPartitions(commitTime, categoryName);
     // prevRuntimeForCategory map is updated with commitTime,
     // even if prevRuntime is -1, since service did run at this point
     prevRuntimeForCategory.put(categoryName, commitTime);
   }
 
-  public abstract void publishMissingPartitions(long commitTime,
+  public abstract void publishPartitions(long commitTime,
       String categoryName) throws InterruptedException;
 
   public boolean addPartition(String location, String streamName,

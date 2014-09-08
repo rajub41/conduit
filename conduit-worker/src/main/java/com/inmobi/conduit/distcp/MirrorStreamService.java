@@ -58,7 +58,6 @@ import com.inmobi.conduit.utils.DatePathComparator;
 
 public class MirrorStreamService extends DistcpBaseService {
   private static final Log LOG = LogFactory.getLog(MirrorStreamService.class);
-  private static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
 
   public MirrorStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
@@ -81,43 +80,6 @@ public class MirrorStreamService extends DistcpBaseService {
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
     }
-  }
-
-
-  public void prepareLastAddedPartitionMap() throws InterruptedException {
-   /* HCatClient hcatClient = Conduit.getHCatClient();
-    for (String stream : streamsToProcess) {
-      try {
-        List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
-            Conduit.getHcatDBName(), getTableName(stream));
-        Collections.sort(hCatPartitionList, new HCatPartitionComparator());
-        HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
-        Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
-            lastHcatPartition.getLocation(), stream);
-        if (lastAddedPartitionDate != null) {
-          lastAddedPartitionMap  .put(stream, lastAddedPartitionDate.getTime());
-        }
-      } catch (HCatException e) {
-        e.printStackTrace();
-      }
-    }
-    */
-  }
-
-  private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
-    String streamRootDirPrefix = destCluster.getFinalDestDirRoot() + stream;
-    Date lastAddedPartitionDate = CalendarHelper.getDateFromStreamDir(
-        streamRootDirPrefix, lastHcatPartitionLoc);
-    return lastAddedPartitionDate;
-  }
-
-
-  private String getTableName(String streamName) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(TABLE_PREFIX);
-    sb.append("_");
-    sb.append(streamName);
-    return sb.toString();
   }
 
   private void publishPartitions(Path destPath, String streamName)
@@ -505,9 +467,8 @@ public class MirrorStreamService extends DistcpBaseService {
     return "MirrorStreamService";
   }
 
-
   @Override
-  public void publishMissingPartitions(long commitTime, String categoryName)
+  public void publishPartitions(long commitTime, String categoryName)
       throws InterruptedException {
     // TODO Auto-generated method stub
     
