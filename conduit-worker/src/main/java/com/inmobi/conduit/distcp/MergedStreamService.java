@@ -30,15 +30,23 @@ import java.util.Set;
 import com.inmobi.conduit.AbstractService;
 import com.inmobi.conduit.CheckpointProvider;
 import com.inmobi.conduit.Cluster;
+import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
+import com.inmobi.conduit.DestinationStream;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.DatePathComparator;
 import com.inmobi.conduit.utils.FileUtil;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
+import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
+import org.apache.hive.hcatalog.api.HCatClient;
+import org.apache.hive.hcatalog.api.HCatPartition;
+import org.apache.hive.hcatalog.common.HCatException;
 
 import com.google.common.collect.Table;
 import com.inmobi.audit.thrift.AuditMessage;
@@ -53,6 +61,9 @@ public class MergedStreamService extends DistcpBaseService {
 
   private static final Log LOG = LogFactory.getLog(MergedStreamService.class);
 
+  private static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
+  private static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
+  private static boolean failedTogetPartitions = false;
 
   public MergedStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
@@ -171,6 +182,186 @@ public class MergedStreamService extends DistcpBaseService {
       getDestFs().delete(tmpOut, true);
       LOG.debug("Deleting [" + tmpOut + "]");
       publishAuditMessages(auditMsgList);
+    }
+  }
+
+  private void prepareStreamHcatEnableMap() {
+    Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
+    for (String stream : streamsToProcess) {
+      if (destStreamMap.containsKey(stream)
+          && destStreamMap.get(stream).isHCatEnabled()) {
+        streamHcatEnableMap.put(stream, true);
+      } else {
+        streamHcatEnableMap.put(stream, false);
+      }
+    }
+  }
+
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    // TODO re-factor this method name if required
+    prepareStreamHcatEnableMap();
+
+    HCatClient hcatClient = Conduit.getHCatClient();
+
+    for (String stream : streamsToProcess) {
+      if (streamHcatEnableMap.get(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          failedTogetPartitions = true;
+          e.printStackTrace();
+        }
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
+      }
+    }
+    Conduit.submitBack(hcatClient);
+  }
+
+  private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
+    String streamRootDirPrefix = destCluster.getFinalDestDirRoot() + stream;
+    LOG.info("AAAAAAAAAAAAAAAAAAa find the time stamp from : " + lastHcatPartitionLoc + "   stream " + streamRootDirPrefix);
+    Date lastAddedPartitionDate = CalendarHelper.getDateFromStreamDir(
+        streamRootDirPrefix, lastHcatPartitionLoc);
+    return lastAddedPartitionDate;
+  }
+
+  private void findLastPartition(HCatClient hcatClient, String stream)
+      throws HCatException {
+    List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
+        Conduit.getHcatDBName(), getTableName(stream));
+    if (hCatPartitionList.isEmpty()) {
+      LOG.info("No partitions present for " + stream + " stream ");
+      lastAddedPartitionMap.put(stream, (long) -1);
+      return;
+      //continue;
+    }
+    Collections.sort(hCatPartitionList, new HCatPartitionComparator());
+    HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
+    Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
+        lastHcatPartition.getLocation(), stream);
+    if (lastAddedPartitionDate != null) {
+      lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+    } else {
+      // if there are no partitions in the hcatalog table then it should create partitions from current time
+      lastAddedPartitionMap.put(stream, (long) -1);
+    }
+  }
+
+  private String getTableName(String streamName) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(TABLE_PREFIX);
+    sb.append("_");
+    sb.append(streamName);
+    return sb.toString();
+  }
+
+
+  public void publishMissingPartitions(long commitTime, String streamName)
+      throws InterruptedException {
+    if (destCluster.getDestinationStreams().containsKey(streamName)
+        && !destCluster.getDestinationStreams().get(streamName).isHCatEnabled()) {
+      //TODO add log  or properly fix it here
+      return;
+    }
+    HCatClient hcatClient = Conduit.getHCatClient();
+    try {
+      long lastAddedTime = lastAddedPartitionMap.get(streamName);
+      LOG.info("AAAAAAAAAAAAAAAAAAA lastadded partition time : " + lastAddedTime);
+      if (lastAddedTime == -1) {
+        if (!failedTogetPartitions) {
+          lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+          LOG.info("AAAAAAAAAAAAAAAAAAA lastadded partition time : not failed  " + lastAddedTime);
+          return;
+        } else {
+          // TODO 
+          try {
+            findLastPartition(hcatClient, streamName);
+            lastAddedTime = lastAddedPartitionMap.get(streamName);
+            if (lastAddedTime == -1) {
+              lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
+              LOG.info("AAAAAAAAAAAAAAAAAAA lastadded partition time  failed : " + lastAddedTime);
+
+              return;
+            }
+          } catch (HCatException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return;
+          }
+        }
+      }
+      long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
+      if (isMissingPartitions(commitTime, nextPartitionTime)) {
+        LOG.info("Last added partition : [" + getLogDateString(lastAddedTime) + "]");
+        while (isMissingPartitions(commitTime, nextPartitionTime)) {
+          String missingPartition = Cluster.getDestDir(
+              srcCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
+          try {
+            LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAA misssing partition : " + missingPartition);
+            if (addPartition(missingPartition, streamName, nextPartitionTime,
+                getTableName(streamName), hcatClient)) {
+              lastAddedPartitionMap.put(streamName, nextPartitionTime);
+            } else {
+              LOG.error("Exception occured while trying to add partition ");
+              break;
+            }
+            nextPartitionTime = nextPartitionTime + MILLISECONDS_IN_MINUTE;
+          } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            break;
+          }
+        }
+      }
+    } catch (Exception e) {
+
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } finally {
+      if (hcatClient != null) {
+        Conduit.submitBack(hcatClient);
+      }
+    }
+  }
+
+  public boolean addPartition(String location, String streamName,
+      long partTimeStamp, String tableName, HCatClient hcatClient) throws InterruptedException {
+    String dbName = Conduit.getHcatDBName();
+    String dateStr = Cluster.getDateAsYYYYMMDDHHMNPath(partTimeStamp);
+    String [] dateSplits = dateStr.split(File.separator);
+    Map<String, String> partSpec = new HashMap<String, String>();
+    if (dateSplits.length == 5) {
+      partSpec.put("year", dateSplits[0]);
+      partSpec.put("month", dateSplits[1]);
+      partSpec.put("day", dateSplits[2]);
+      partSpec.put("hour", dateSplits[3]);
+      partSpec.put("minute", dateSplits[4]);
+    }
+    try {
+      LOG.info("AAAAAAAAAAAAAAAAAA going to create parititons : " + partSpec + "    table name : " + tableName + "   location " + location);
+      HCatAddPartitionDesc partInfo = HCatAddPartitionDesc.create(dbName,
+          tableName, location, partSpec).build();
+      if (hcatClient != null) {
+        hcatClient.addPartition(partInfo);
+      } else {
+        LOG.warn("AAAAAAAAAAAAAAAAAAAa did not get hcatcleint " + hcatClient);
+        return false;
+      }
+      LOG.info("AAAAAAAAAAAAAAAAAAAA  partition is added successfully : " + partInfo);
+      return true;
+    } catch (HCatException e) {
+      if (e.getCause() instanceof AlreadyExistsException) {
+        LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAa already exists ", e);
+        return true;
+      }
+      LOG.error("AAAAAAAAAAAAAAAAAAAAA exception occured while adding the partition", e);
+
+      e.printStackTrace();
+      return false;
     }
   }
 
