@@ -29,6 +29,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import com.inmobi.conduit.utils.CalendarHelper;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -135,6 +136,8 @@ public abstract class AbstractService implements Service, Runnable {
   }
 
   public abstract long getMSecondsTillNextRun(long currentTime);
+  
+  public abstract void prepareLastAddedPartitionMap() throws InterruptedException;
 
   protected abstract void execute() throws Exception;
 
@@ -325,10 +328,16 @@ public abstract class AbstractService implements Service, Runnable {
         }
       }
     }
+    
+    publishMissingPartitions(commitTime, categoryName);
+    // 
     // prevRuntimeForCategory map is updated with commitTime,
     // even if prevRuntime is -1, since service did run at this point
     prevRuntimeForCategory.put(categoryName, commitTime);
   }
+
+  public abstract void publishMissingPartitions(long commitTime, String categoryName) throws InterruptedException;
+    // TODO Auto-generated method stub
 
   /*
    * Retries renaming a file to a given num of times defined by
@@ -516,6 +525,10 @@ public abstract class AbstractService implements Service, Runnable {
 
   private boolean isMissingPaths(long commitTime, long prevRuntime) {
     return ((commitTime - prevRuntime) >= MILLISECONDS_IN_MINUTE);
+  }
+
+  protected boolean isMissingPartitions(long commitTime, long lastAddedPartTime) {
+    return ((commitTime - lastAddedPartTime) >= MILLISECONDS_IN_MINUTE);
   }
 
   protected void publishMissingPaths(FileSystem fs, String destDir,

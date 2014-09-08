@@ -28,6 +28,7 @@ import java.util.Set;
 import com.inmobi.conduit.AbstractService;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.FileUtil;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -58,6 +59,7 @@ public abstract class DistcpBaseService extends AbstractService {
   private final int numOfDirPerDistcpPerStream;
   protected final Path jarsPath;
   protected final Path auditUtilJarDestPath;
+  protected static final String TABLE_PREFIX = "conduit";
 
   public DistcpBaseService(ConduitConfig config, String name,
       Cluster srcCluster, Cluster destCluster, Cluster currentCluster,
