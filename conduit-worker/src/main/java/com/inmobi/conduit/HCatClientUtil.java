@@ -28,7 +28,13 @@ public class HCatClientUtil {
     HiveConf hcatConf = new HiveConf();
     hcatConf.set("hive.metastore.local", "false");
     hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metastoreURL);
-    
+    /*  hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
+    hcatConf.set(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK.varname,
+        HCatSemanticAnalyzer.class.getName());
+    hcatConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
+
+    hcatConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
+    hcatConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");*/
     buffer = new LinkedBlockingDeque<HCatClient>(numOfHCatClients);
     for (int i = 0; i < numOfHCatClients; i++) {
       HCatClient hcatClient = HCatClient.create(hcatConf);
@@ -44,6 +50,25 @@ public class HCatClientUtil {
       return buffer.poll(60, TimeUnit.SECONDS);
     } else {
       return null;
+    }
+  }
+
+  public void submitBack(HCatClient hcatClient) {
+    if (buffer != null) {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAa submitting back : " + buffer.size());
+      buffer.offer(hcatClient);
+      LOG.info("AAAAAAAAAAAAAAAAAAAAa after submission : " + buffer.size());
+    }
+  }
+
+  public void close() {
+    Iterator<HCatClient> hcatIt = buffer.iterator();
+    while(hcatIt.hasNext()) {
+      try {
+        hcatIt.next().close();
+      } catch (HCatException e) {
+        LOG.info("Exception occured while closing HCatClient ");
+      }
     }
   }
 }

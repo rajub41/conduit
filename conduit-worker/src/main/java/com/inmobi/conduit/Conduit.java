@@ -27,9 +27,12 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.inmobi.conduit.local.LocalStreamService;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -245,7 +248,7 @@ public class Conduit implements Service, ConduitConstants {
 
   private void prepareLastAddedPartitions() {
     for (AbstractService service : services) {
-      try {
+       try {
         service.prepareLastAddedPartitionMap();
       } catch (InterruptedException e) {
         // TODO check what to do with interrupted exception and others
