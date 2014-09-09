@@ -43,6 +43,7 @@ import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConfigParser;
 import com.inmobi.conduit.DestinationStream;
+import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.SourceStream;
 
 /*
@@ -65,10 +66,10 @@ public class DataPurgerService extends AbstractService {
   private final static String PURGEPATHS_COUNT = "purgePaths.count";
   private final static String DELETE_FAILURES_COUNT = "deleteFailures.count";
 
-  public DataPurgerService(ConduitConfig conduitConfig, Cluster cluster)
+  public DataPurgerService(ConduitConfig conduitConfig, Cluster cluster, HCatClientUtil hcatUtil)
       throws Exception {
     super(DataPurgerService.class.getName(), conduitConfig, 60000 * 60, null,
-        new HashSet<String>());
+        new HashSet<String>(), null);
     this.cluster = cluster;
     fs = FileSystem.get(cluster.getHadoopConf());
     this.defaulttrashPathRetentioninHours = new Integer(
@@ -420,12 +421,8 @@ public class DataPurgerService extends AbstractService {
         }
       }
     }
-    try {
-      Conduit.submitBack(hcatClient);
-    } catch (InterruptedException e1) {
-      // TODO Auto-generated catch block
-      e1.printStackTrace();
-    }
+      submitBack(hcatClient);
+    
 
     Iterator it = streamsToPurge.iterator();
     Path purgePath = null;

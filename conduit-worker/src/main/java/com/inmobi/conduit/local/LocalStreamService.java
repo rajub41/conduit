@@ -37,6 +37,7 @@ import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.ConfigConstants;
+import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.HCatPartitionComparator;
@@ -114,11 +115,11 @@ public class LocalStreamService extends AbstractService implements
 
   public LocalStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster currentCluster, CheckpointProvider provider,
-      Set<String> streamsToProcess)
+      Set<String> streamsToProcess, HCatClientUtil hcatUtil)
           throws IOException {
     super("LocalStreamService_" + srcCluster + "_" +
         getServiceName(streamsToProcess), config, DEFAULT_RUN_INTERVAL,
-        provider, streamsToProcess);
+        provider, streamsToProcess, hcatUtil);
     this.srcCluster = srcCluster;
     if (currentCluster == null)
       this.currentCluster = srcCluster;
@@ -192,7 +193,7 @@ public class LocalStreamService extends AbstractService implements
          LOG.info("Hcatalog is not enabled for " + stream + " stream");
        }
      }
-     Conduit.submitBack(hcatClient);
+     submitBack(hcatClient);
   }
 
 
@@ -257,7 +258,7 @@ public class LocalStreamService extends AbstractService implements
       LOG.info("Hcat is not enabled for " + streamName + " stream");
       return;
     }
-    HCatClient hcatClient = Conduit.getHCatClient();
+    HCatClient hcatClient = getHCatClient();
     if (hcatClient == null) {
       return;
     }
@@ -316,9 +317,7 @@ public class LocalStreamService extends AbstractService implements
       // TODO Auto-generated catch block
       e.printStackTrace();
     } finally {
-      if (hcatClient != null) {
-        Conduit.submitBack(hcatClient);
-      }
+      submitBack(hcatClient);     
     }
   }
 

@@ -68,7 +68,7 @@ public class Conduit implements Service, ConduitConstants {
   private static boolean isHCatEnabled = false;
   private static String hcatDBName = null;
   private static int numOfHCatClients = 10;
-  private static HCatClientUtil hcatUtil = null;
+  private HCatClientUtil hcatUtil = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
                  String currentCluster) {
@@ -115,6 +115,9 @@ public class Conduit implements Service, ConduitConstants {
 
   protected List<AbstractService> init() throws Exception {
     Cluster currentCluster = null;
+    
+    createHCatUtil();
+    
     if (currentClusterName != null) {
       currentCluster = config.getClusters().get(currentClusterName);
     }
@@ -239,14 +242,25 @@ public class Conduit implements Service, ConduitConstants {
       Cluster cluster = config.getClusters().get(clusterName);
       LOG.info("Starting Purger for Cluster [" + clusterName + "]");
       //Start a purger per cluster
-      services.add(new DataPurgerService(config, cluster));
+      services.add(new DataPurgerService(config, cluster, hcatUtil));
     }
     if (isHCatEnabled) {
       // TODO change name is required
-      ParseAndCreateHCatClients();
       prepareLastAddedPartitions();
     }
     return services;
+  }
+
+  protected void createHCatUtil() {
+    if (isHCatEnabled) {
+      HiveConf conf = new HiveConf();
+      String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
+      if (metastoreUrl == null) {
+        throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
+      }
+      LOG.info("hive metastore uri is : " + metastoreUrl);
+      hcatUtil = new HCatClientUtil(metastoreUrl);
+    }
   }
 
   private void prepareLastAddedPartitions() {
@@ -294,7 +308,8 @@ public class Conduit implements Service, ConduitConstants {
       Cluster cluster, Cluster currentCluster, Set<String> streamsToProcess)
           throws IOException {
     return new LocalStreamService(config, cluster, currentCluster,
-        new FSCheckpointProvider(cluster.getCheckpointDir()), streamsToProcess);
+        new FSCheckpointProvider(cluster.getCheckpointDir()), streamsToProcess,
+        hcatUtil);
   }
 
   protected MergedStreamService getMergedStreamService(ConduitConfig config,
@@ -304,7 +319,7 @@ public class Conduit implements Service, ConduitConstants {
     return new MergedStreamService(config, srcCluster, dstCluster,
         currentCluster,
         new FSCheckpointProvider(dstCluster.getCheckpointDir()),
-        streamsToProcess);
+        streamsToProcess, hcatUtil);
   }
 
   protected MirrorStreamService getMirrorStreamService(ConduitConfig config,
@@ -314,18 +329,18 @@ public class Conduit implements Service, ConduitConstants {
     return new MirrorStreamService(config, srcCluster, dstCluster,
         currentCluster,
         new FSCheckpointProvider(dstCluster.getCheckpointDir()),
-        streamsToProcess);
+        streamsToProcess, hcatUtil);
 
   }
 
-  public void ParseAndCreateHCatClients() throws Exception {
+  public void parseAndCreateHCatClients() throws Exception {
     if (isHCatEnabled) {
-      HiveConf conf = new HiveConf();
+      /*HiveConf conf = new HiveConf();
       String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
       if (metastoreUrl == null) {
         throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
       }
-      LOG.info("hive metastore uri is : " + metastoreUrl);
+      LOG.info("hive metastore uri is : " + metastoreUrl);*/
       try {
         String hcatCientsRaio = System.getProperty(HCAT_CLIENTS_RATIO, "1/5");
         String ratioStr = hcatCientsRaio.split("/")[1];
@@ -344,33 +359,29 @@ public class Conduit implements Service, ConduitConstants {
             + " of hcatClients ", e);
         numOfHCatClients = 10;
       }
-      createHCatClients(metastoreUrl);
+      createHCatClients();
     }
   }
-
-  public static void setHcatClientUtil(HCatClientUtil hcatClientUtil) {
+/*
+  public void setHcatClientUtil(HCatClientUtil hcatClientUtil) {
     hcatUtil = hcatClientUtil;
   }
 
-  static void createHCatClients(String metastoreUrl) throws Exception {
+*/
+  
+  private void createHCatClients() throws Exception {
     try {
-      hcatUtil = new HCatClientUtil(metastoreUrl);
+      HiveConf hcatConf = new HiveConf();
+      hcatConf.set("hive.metastore.local", "false");
+      hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, hcatUtil.getMetastoreUrl());
       LOG.info("Going to create HCAT CLIENTS now ");
-      hcatUtil.createHCatClients(numOfHCatClients);
+      hcatUtil.createHCatClients(numOfHCatClients, hcatConf);
     } catch (Exception e) {
       LOG.error("Got exception while creatig hcat clients ", e);
       throw e;
       // TODO Auto-generated catch block
      // e.printStackTrace();
     }
-  }
-
-  public static HCatClient getHCatClient() throws InterruptedException {
-    return hcatUtil.getHCatClient();
-  }
-
-  public static void submitBack(HCatClient hCatClient) throws InterruptedException {
-    hcatUtil.submitBack(hCatClient);
   }
 
   @Override
@@ -583,12 +594,11 @@ public class Conduit implements Service, ConduitConstants {
          * to be created
          */
         parseHCatProperties(prop);
-        HiveConf conf = new HiveConf();
+       /* HiveConf conf = new HiveConf();
         String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
         if (metastoreUrl == null) {
           throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
-        }
-        //createHCatClients(metastoreUrl);
+        }*/
       } else {
         LOG.info("HCAT is not enabled for the worker ");
       }

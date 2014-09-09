@@ -84,6 +84,8 @@ public abstract class AbstractService implements Service, Runnable {
   public final static String FILES_COPIED_COUNT = "filesCopied.count";
   public final static String DATAPURGER_SERVICE = "DataPurgerService";
   public final static String LAST_FILE_PROCESSED = "lastfile.processed";
+  
+  protected HCatClientUtil hcatUtil = null;
 
   protected static String hostname;
   static {
@@ -98,12 +100,13 @@ public abstract class AbstractService implements Service, Runnable {
 
 
   public AbstractService(String name, ConduitConfig config,
-      Set<String> streamsToProcess) {
-    this(name, config, DEFAULT_RUN_INTERVAL,streamsToProcess);
+      Set<String> streamsToProcess, HCatClientUtil hcatUtil) {
+    this(name, config, DEFAULT_RUN_INTERVAL,streamsToProcess, hcatUtil);
   }
 
   public AbstractService(String name, ConduitConfig config,
-      long runIntervalInMsec, Set<String> streamsToProcess) {
+      long runIntervalInMsec, Set<String> streamsToProcess,
+      HCatClientUtil hcatUtil) {
     this.config = config;
     this.name = name;
     this.runIntervalInMsec = runIntervalInMsec;
@@ -115,12 +118,13 @@ public abstract class AbstractService implements Service, Runnable {
     } else {
       numOfRetries = Integer.parseInt(retries);
     }
+    this.hcatUtil = hcatUtil;
   }
 
   public AbstractService(String name, ConduitConfig config,
       long runIntervalInMsec, CheckpointProvider provider,
-      Set<String> streamsToProcess) {
-    this(name, config, runIntervalInMsec, streamsToProcess);
+      Set<String> streamsToProcess, HCatClientUtil hcatUtil) {
+    this(name, config, runIntervalInMsec, streamsToProcess, hcatUtil);
     this.checkpointProvider = provider;
   }
 
@@ -256,16 +260,22 @@ public abstract class AbstractService implements Service, Runnable {
     int retryCount = 0;
     while (retryCount < numOfRetries) {
       try {
-        hcatClient = Conduit.getHCatClient();
+        hcatClient = hcatUtil.getHCatClient();
       } catch (InterruptedException e) {
+        retryCount++;
         e.printStackTrace();
       }
       if (hcatClient != null) {
         break;
-      }
-      retryCount++;
+      }     
     }
     return hcatClient;
+  }
+
+  protected void submitBack(HCatClient hcatClient) {
+    if (hcatClient != null) {
+      hcatUtil.submitBack(hcatClient);
+    }
   }
 
   private Path getLatestDir(FileSystem fs, Path Dir) throws Exception {

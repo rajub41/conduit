@@ -49,6 +49,7 @@ import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.DestinationStream;
+import com.inmobi.conduit.HCatClientUtil;
 
 
 public abstract class DistcpBaseService extends AbstractService {
@@ -67,16 +68,14 @@ public abstract class DistcpBaseService extends AbstractService {
   protected final Path jarsPath;
   protected final Path auditUtilJarDestPath;
   protected static final String TABLE_PREFIX = "conduit";
-  public static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
-  public static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
-  protected static boolean failedTogetPartitions = false;
-
+  
   public DistcpBaseService(ConduitConfig config, String name,
       Cluster srcCluster, Cluster destCluster, Cluster currentCluster,
-      CheckpointProvider provider, Set<String> streamsToProcess)
+      CheckpointProvider provider, Set<String> streamsToProcess,
+      HCatClientUtil hcatUtil)
           throws Exception {
     super(name + "_" + srcCluster.getName() + "_" + destCluster.getName(),
-        config, streamsToProcess);
+        config, streamsToProcess, hcatUtil);
     this.srcCluster = srcCluster;
     this.destCluster = destCluster;
     if (currentCluster != null)
@@ -142,46 +141,7 @@ public abstract class DistcpBaseService extends AbstractService {
     return true;
   }
 
-  private void prepareStreamHcatEnableMap() {
-    Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
-    for (String stream : streamsToProcess) {
-      if (destStreamMap.containsKey(stream)
-          && destStreamMap.get(stream).isHCatEnabled()) {
-        streamHcatEnableMap.put(stream, true);
-      } else {
-        streamHcatEnableMap.put(stream, false);
-      }
-    }
-  }
-
-  public void prepareLastAddedPartitionMap() throws InterruptedException {
-    // TODO re-factor this method name if required
-    prepareStreamHcatEnableMap();
-
-    HCatClient hcatClient = getHCatClient();
-    if (hcatClient == null) {
-      return;
-    }
-    
-    for (String stream : streamsToProcess) {
-      if (streamHcatEnableMap.get(stream)) {
-        try {
-          // TODO rename if required
-          findLastPartition(hcatClient, stream);
-        } catch (HCatException e) {
-          LOG.warn("Got Exception while finding hte last added partition for"
-              + " each stream");
-          failedTogetPartitions = true;
-          e.printStackTrace();
-        }
-      } else {
-        LOG.info("Hcatalog is not enabled for " + stream + " stream");
-      }
-    }
-    Conduit.submitBack(hcatClient);
-  }
-
-  protected void findLastPartition(HCatClient hcatClient, String stream)
+/*    protected void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
         Conduit.getHcatDBName(), getTableName(stream));
@@ -195,13 +155,15 @@ public abstract class DistcpBaseService extends AbstractService {
     Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
         lastHcatPartition.getLocation(), stream);
     if (lastAddedPartitionDate != null) {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + lastAddedPartitionDate.getTime());
       lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
     } else {
       // if there are no partitions in the hcatalog table then it should create partitions from current time
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + (-1));
       lastAddedPartitionMap.put(stream, (long) -1);
     }
   }
-
+*/
   protected String getTableName(String streamName) {
     StringBuilder sb = new StringBuilder();
     sb.append(TABLE_PREFIX);

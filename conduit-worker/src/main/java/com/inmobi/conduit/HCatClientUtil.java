@@ -23,11 +23,15 @@ public class HCatClientUtil {
     this.metastoreURL = metastoreURL;
   }
 
-  public void createHCatClients(int numOfHCatClients)
+  public String getMetastoreUrl() {
+    return metastoreURL; 
+  }
+
+  public void createHCatClients(int numOfHCatClients, HiveConf hcatConf)
       throws HCatException, InterruptedException {
-    HiveConf hcatConf = new HiveConf();
+    /*HiveConf hcatConf = new HiveConf();
     hcatConf.set("hive.metastore.local", "false");
-    hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metastoreURL);
+    hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metastoreURL);*/
     /*  hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hcatConf.set(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK.varname,
         HCatSemanticAnalyzer.class.getName());

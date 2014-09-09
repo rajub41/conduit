@@ -149,7 +149,7 @@ public class DataPurgerServiceTest {
   private class TestDataPurgerService extends DataPurgerService {
     public TestDataPurgerService(ConduitConfig config, Cluster cluster)
         throws Exception {
-      super(config, cluster);
+      super(config, cluster, null);
     }
 
     public void runOnce() throws Exception {

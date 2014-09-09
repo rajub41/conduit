@@ -33,6 +33,7 @@ import com.inmobi.conduit.Cluster;
 import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.DestinationStream;
+import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.DatePathComparator;
 import com.inmobi.conduit.utils.FileUtil;
@@ -61,14 +62,80 @@ import com.inmobi.conduit.metrics.ConduitMetrics;
 public class MergedStreamService extends DistcpBaseService {
 
   private static final Log LOG = LogFactory.getLog(MergedStreamService.class);
+  
+  public static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
+  public static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
+  protected static boolean failedTogetPartitions = false;
+
+  private void prepareStreamHcatEnableMap() {
+    Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
+    for (String stream : streamsToProcess) {
+      if (destStreamMap.containsKey(stream)
+          && destStreamMap.get(stream).isHCatEnabled()) {
+        streamHcatEnableMap.put(stream, true);
+      } else {
+        streamHcatEnableMap.put(stream, false);
+      }
+    }
+  }
+
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    // TODO re-factor this method name if required
+    prepareStreamHcatEnableMap();
+
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
+
+    for (String stream : streamsToProcess) {
+      if (streamHcatEnableMap.get(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          failedTogetPartitions = true;
+          e.printStackTrace();
+        }
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
+      }
+    }
+    submitBack(hcatClient);
+  }
+
+  protected void findLastPartition(HCatClient hcatClient, String stream)
+      throws HCatException {
+    List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
+        Conduit.getHcatDBName(), getTableName(stream));
+    if (hCatPartitionList.isEmpty()) {
+      LOG.info("No partitions present for " + stream + " stream ");
+      lastAddedPartitionMap.put(stream, (long) -1);
+      return;
+    }
+    Collections.sort(hCatPartitionList, new HCatPartitionComparator());
+    HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
+    Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
+        lastHcatPartition.getLocation(), stream);
+    if (lastAddedPartitionDate != null) {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + lastAddedPartitionDate.getTime());
+      lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+    } else {
+      // if there are no partitions in the hcatalog table then it should create partitions from current time
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + (-1));
+      lastAddedPartitionMap.put(stream, (long) -1);
+    }
+  }
 
   public MergedStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
-      CheckpointProvider provider, Set<String> streamsToProcess)
-          throws Exception {
+      CheckpointProvider provider, Set<String> streamsToProcess,
+      HCatClientUtil hcatUtil) throws Exception {
     super(config, "MergedStreamService_" + getServiceName(streamsToProcess),
         srcCluster, destinationCluster, currentCluster, provider,
-        streamsToProcess);
+        streamsToProcess, hcatUtil);
 
     for (String eachStream : streamsToProcess) {
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(), AbstractService.RETRY_CHECKPOINT, eachStream);
@@ -189,7 +256,7 @@ public class MergedStreamService extends DistcpBaseService {
       LOG.info("Hcat is not enabled for " + streamName + " stream");
       return;
     }
-    HCatClient hcatClient = Conduit.getHCatClient();
+    HCatClient hcatClient = getHCatClient();
     if (hcatClient == null) {
       return;
     }
@@ -247,9 +314,7 @@ public class MergedStreamService extends DistcpBaseService {
       // TODO Auto-generated catch block
       e.printStackTrace();
     } finally {
-      if (hcatClient != null) {
-        Conduit.submitBack(hcatClient);
-      }
+      submitBack(hcatClient);
     }
   }
 

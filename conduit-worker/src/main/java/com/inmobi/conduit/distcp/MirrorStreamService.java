@@ -47,6 +47,8 @@ import com.inmobi.conduit.metrics.ConduitMetrics;
 import com.inmobi.conduit.CheckpointProvider;
 import com.inmobi.conduit.Cluster;
 import com.inmobi.conduit.Conduit;
+import com.inmobi.conduit.DestinationStream;
+import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.utils.DatePathComparator;
 
 /* Assumption - Mirror is always of a merged Stream.There is only 1 instance of a merged Stream
@@ -58,14 +60,82 @@ import com.inmobi.conduit.utils.DatePathComparator;
 
 public class MirrorStreamService extends DistcpBaseService {
   private static final Log LOG = LogFactory.getLog(MirrorStreamService.class);
+  
+  public static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
+  public static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
+  protected static boolean failedTogetPartitions = false;
+
+  private void prepareStreamHcatEnableMap() {
+    Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
+    for (String stream : streamsToProcess) {
+      if (destStreamMap.containsKey(stream)
+          && destStreamMap.get(stream).isHCatEnabled()) {
+        streamHcatEnableMap.put(stream, true);
+      } else {
+        streamHcatEnableMap.put(stream, false);
+      }
+    }
+  }
+
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    // TODO re-factor this method name if required
+    prepareStreamHcatEnableMap();
+
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
+
+    for (String stream : streamsToProcess) {
+      if (streamHcatEnableMap.get(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          failedTogetPartitions = true;
+          e.printStackTrace();
+        }
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
+      }
+    }
+    submitBack(hcatClient);
+  }
+
+
+  protected void findLastPartition(HCatClient hcatClient, String stream)
+      throws HCatException {
+    List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
+        Conduit.getHcatDBName(), getTableName(stream));
+    if (hCatPartitionList.isEmpty()) {
+      LOG.info("No partitions present for " + stream + " stream ");
+      lastAddedPartitionMap.put(stream, (long) -1);
+      return;
+    }
+    Collections.sort(hCatPartitionList, new HCatPartitionComparator());
+    HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
+    Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
+        lastHcatPartition.getLocation(), stream);
+    if (lastAddedPartitionDate != null) {
+      LOG.info("mirrorrrrrrrrrr AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + lastAddedPartitionDate.getTime());
+      lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+    } else {
+      // if there are no partitions in the hcatalog table then it should create partitions from current time
+      LOG.info("mirrorr    AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + (-1));
+      lastAddedPartitionMap.put(stream, (long) -1);
+    }
+  }
+
 
   public MirrorStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
-      CheckpointProvider provider, Set<String> streamsToProcess)
-          throws Exception {
+      CheckpointProvider provider, Set<String> streamsToProcess,
+      HCatClientUtil hcatUtil) throws Exception {
     super(config, "MirrorStreamService_" + getServiceName(streamsToProcess),
         srcCluster, destinationCluster, currentCluster, provider,
-        streamsToProcess);
+        streamsToProcess, hcatUtil);
     for (String eachStream : streamsToProcess) {
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(), RETRY_CHECKPOINT, eachStream);
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(), RETRY_MKDIR, eachStream);
@@ -87,20 +157,31 @@ public class MirrorStreamService extends DistcpBaseService {
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
     Path streamDirPrefix = new Path(destCluster.getFinalDestDirRoot(), streamName);
     Date fileTimeStamp = CalendarHelper.getDateFromStreamDir(streamDirPrefix, destPath);
+    LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAa filetime stamp : " + fileTimeStamp + "    AAAAAA " + lastAddedTime);
     long nextPartitionTime = fileTimeStamp.getTime() - MILLISECONDS_IN_MINUTE;
-    HCatClient hcatClient = Conduit.getHCatClient();
-    if (lastAddedTime >= nextPartitionTime) {
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
       return;
-    } else {
-      String missingPartition = Cluster.getDestDir(
-          destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
-      try {
-        addPartition(missingPartition, streamName, nextPartitionTime,
-            getTableName(streamName), hcatClient);
-      } catch (Exception e) {
-        e.printStackTrace();
+    }
+    try {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa   last added time ::"
+          + "  nextAdded pat time  " +  lastAddedTime + "  :: " + nextPartitionTime + "    AAAA path : dest path " + destPath);
+      if (lastAddedTime >= nextPartitionTime) {
+        return;
+      } else {
+        String missingPartition = Cluster.getDestDir(
+            destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
+        LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA missingpartition : " + missingPartition);
+        try {
+          addPartition(missingPartition, streamName, nextPartitionTime,
+              getTableName(streamName), hcatClient);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        lastAddedPartitionMap.put(streamName, nextPartitionTime);
       }
-      lastAddedPartitionMap.put(streamName, nextPartitionTime);
+    } finally {
+      submitBack(hcatClient);
     }
   }
 

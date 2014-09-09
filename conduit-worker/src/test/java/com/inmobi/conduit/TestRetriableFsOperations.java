@@ -34,13 +34,13 @@ public class TestRetriableFsOperations extends AbstractService {
   }
 
   public TestRetriableFsOperations() {
-    super(null, null, -1, null, null);
+    super(null, null, -1, null, null, null);
   }
 
   public TestRetriableFsOperations(String name, ConduitConfig config,
       long runIntervalInMsec, CheckpointProvider provider,
       Set<String> streamsToProcess) {
-    super(name, config, runIntervalInMsec, provider, streamsToProcess);
+    super(name, config, runIntervalInMsec, provider, streamsToProcess, null);
   }
 
   @BeforeMethod
