@@ -72,7 +72,7 @@ public abstract class AbstractService implements Service, Runnable {
   protected final Set<String> streamsToProcess;
   protected final Map<String, Long> lastProcessedFile;
   private final static long TIME_RETRY_IN_MILLIS = 500;
-  private int numOfRetries;
+  protected int numOfRetries;
   protected Path tmpCounterOutputPath;
   public final static String RUNTIME = "runtime";
   public final static String FAILURES = "failures";
@@ -251,6 +251,23 @@ public abstract class AbstractService implements Service, Runnable {
     return LogDateFormat.format(commitTime);
   }
 
+  public HCatClient getHCatClient() {
+    HCatClient hcatClient = null;
+    int retryCount = 0;
+    while (retryCount < numOfRetries) {
+      try {
+        hcatClient = Conduit.getHCatClient();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      if (hcatClient != null) {
+        break;
+      }
+      retryCount++;
+    }
+    return hcatClient;
+  }
+
   private Path getLatestDir(FileSystem fs, Path Dir) throws Exception {
 
     FileStatus[] fileStatus;
@@ -333,7 +350,6 @@ public abstract class AbstractService implements Service, Runnable {
         }
       }
     }
-    
     publishPartitions(commitTime, categoryName);
     // prevRuntimeForCategory map is updated with commitTime,
     // even if prevRuntime is -1, since service did run at this point

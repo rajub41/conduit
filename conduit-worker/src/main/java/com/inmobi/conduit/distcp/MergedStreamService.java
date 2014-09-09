@@ -184,11 +184,15 @@ public class MergedStreamService extends DistcpBaseService {
 
   public void publishPartitions(long commitTime, String streamName)
       throws InterruptedException {
-    if (!streamHcatEnableMap.get(streamName)) {
+    if (!streamHcatEnableMap.containsKey(streamName)
+        || !streamHcatEnableMap.get(streamName)) {
       LOG.info("Hcat is not enabled for " + streamName + " stream");
       return;
     }
     HCatClient hcatClient = Conduit.getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
     try {
       long lastAddedTime = lastAddedPartitionMap.get(streamName);
       LOG.info("AAAAAAAAAAAAAAAAAAA lastadded partition time : " + lastAddedTime);

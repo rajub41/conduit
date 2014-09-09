@@ -383,7 +383,7 @@ public class TestLocalStreamService extends LocalStreamService implements
       throw new Error("Error in LocalStreamService Test PostExecute");
     } catch (AssertionError e) {
       e.printStackTrace();
-      throw new Error("Error in LocalStreamService Test PostExecute");
+      throw new Error("Error in LocalStreamService Test PostExecute", e);
     }
     
   }

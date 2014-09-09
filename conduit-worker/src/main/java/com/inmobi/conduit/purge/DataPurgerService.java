@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hcatalog.api.HCatAddPartitionDesc;
+import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.common.HCatException;
 
@@ -402,12 +402,9 @@ public class DataPurgerService extends AbstractService {
   private void purge() {
     //TODO ***** do hcat operations only if hcatalog is enabled
     // get the hcatClient
-    HCatClient hcatClient = null;
-    try {
-      hcatClient = Conduit.getHCatClient();
-    } catch (InterruptedException e1) {
-      // TODO Auto-generated catch block
-      e1.printStackTrace();
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
+      return;
     }
     Set<Map.Entry<String, Set<Map<String, String>>>> entrySet = partitionsToPurge.entrySet();
 
@@ -415,7 +412,8 @@ public class DataPurgerService extends AbstractService {
       Iterator<Map<String, String>> partIt = entry.getValue().iterator();
       while (partIt.hasNext()) {
         try {
-          hcatClient.dropPartitions(Conduit.getHcatDBName(), entry.getKey(), partIt.next(), true);
+          hcatClient.dropPartitions(Conduit.getHcatDBName(), entry.getKey(),
+              partIt.next(), true);
         } catch (HCatException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();

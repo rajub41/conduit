@@ -41,7 +41,7 @@ public class HCatClientUtil {
       buffer.put(hcatClient);
       LOG.info("HCatClient is created " + hcatClient);
     }
-    LOG.info("Total number of hcat cleints are " + buffer.size());;
+    LOG.info("Total number of hcat cleints are " + buffer.size());
   }
 
   public HCatClient getHCatClient() throws InterruptedException {

@@ -60,7 +60,7 @@ public abstract class DistcpBaseService extends AbstractService {
   private final FileSystem destFs;
   protected final CheckpointProvider provider;
   protected Map<String, Path> checkPointPaths = new HashMap<String, Path>();
-  private static final int DEFAULT_NUM_DIR_PER_DISTCP_STREAM = 30;
+  private static final int DEFAULT_NUM_DIR_PER_DISTCP_STREAM = 200;
 
   protected static final Log LOG = LogFactory.getLog(DistcpBaseService.class);
   private final int numOfDirPerDistcpPerStream;
@@ -158,8 +158,11 @@ public abstract class DistcpBaseService extends AbstractService {
     // TODO re-factor this method name if required
     prepareStreamHcatEnableMap();
 
-    HCatClient hcatClient = Conduit.getHCatClient();
-
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
+    
     for (String stream : streamsToProcess) {
       if (streamHcatEnableMap.get(stream)) {
         try {

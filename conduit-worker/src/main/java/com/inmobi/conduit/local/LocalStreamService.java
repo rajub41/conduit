@@ -39,6 +39,7 @@ import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.ConfigConstants;
 import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;
+import com.inmobi.conduit.utils.HCatPartitionComparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -171,8 +172,11 @@ public class LocalStreamService extends AbstractService implements
     // TODO re-factor this method name if required
      prepareStreamHcatEnableMap();
 
-     HCatClient hcatClient = Conduit.getHCatClient();
-    
+     HCatClient hcatClient = getHCatClient();
+     if (hcatClient == null) {
+       return;
+     }
+
      for (String stream : streamsToProcess) {
        if (streamHcatEnableMap.get(stream)) {
          try {
@@ -189,7 +193,7 @@ public class LocalStreamService extends AbstractService implements
        }
      }
      Conduit.submitBack(hcatClient);
-   }
+  }
 
 
   private void findLastPartition(HCatClient hcatClient, String stream)
@@ -226,10 +230,11 @@ public class LocalStreamService extends AbstractService implements
         streamHcatEnableMap.put(stream, false);
       }
     }
+    LOG.info("AAAAAAAAAAAAAAAA stream hcat enable map : " + streamHcatEnableMap);
   }
 
   private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
-    String streamRootDirPrefix = srcCluster.getLocalFinalDestDirRoot() + stream;
+    String streamRootDirPrefix = new Path(srcCluster.getLocalFinalDestDirRoot(), stream).toString();
     LOG.info("AAAAAAAAAAAAAAAAAAa find the time stamp from : " + lastHcatPartitionLoc + "   stream " + streamRootDirPrefix);
 
     Date lastAddedPartitionDate = CalendarHelper.getDateFromStreamDir(
@@ -247,7 +252,15 @@ public class LocalStreamService extends AbstractService implements
 
   public void publishPartitions(long commitTime, String streamName)
       throws InterruptedException {
+    if (!streamHcatEnableMap.containsKey(streamName)
+        || !streamHcatEnableMap.get(streamName)) {
+      LOG.info("Hcat is not enabled for " + streamName + " stream");
+      return;
+    }
     HCatClient hcatClient = Conduit.getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
     try {
       long lastAddedTime = lastAddedPartitionMap.get(streamName);
       if (lastAddedTime == -1) {

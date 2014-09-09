@@ -68,7 +68,6 @@ public class Conduit implements Service, ConduitConstants {
   private static boolean isHCatEnabled = false;
   private static String hcatDBName = null;
   private static int numOfHCatClients = 10;
-  private static String numOfHCatClientsRatio = "1/5";
   private static HCatClientUtil hcatUtil = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
@@ -108,6 +107,10 @@ public class Conduit implements Service, ConduitConstants {
 
   public static boolean isHCatEnabled() {
     return isHCatEnabled;
+  }
+  
+  public static void setHCatEnabled(boolean enableHcat) {
+    isHCatEnabled = enableHcat;
   }
 
   protected List<AbstractService> init() throws Exception {
@@ -315,7 +318,7 @@ public class Conduit implements Service, ConduitConstants {
 
   }
 
-  private void ParseAndCreateHCatClients() throws Exception {
+  public void ParseAndCreateHCatClients() throws Exception {
     if (isHCatEnabled) {
       HiveConf conf = new HiveConf();
       String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
@@ -345,7 +348,11 @@ public class Conduit implements Service, ConduitConstants {
     }
   }
 
-  private static void createHCatClients(String metastoreUrl) throws Exception {
+  public static void setHcatClientUtil(HCatClientUtil hcatClientUtil) {
+    hcatUtil = hcatClientUtil;
+  }
+
+  static void createHCatClients(String metastoreUrl) throws Exception {
     try {
       hcatUtil = new HCatClientUtil(metastoreUrl);
       LOG.info("Going to create HCAT CLIENTS now ");

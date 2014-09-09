@@ -27,6 +27,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.log4j.Logger;
+import org.mortbay.log.Log;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -196,10 +197,13 @@ public class ConduitConfigParser implements ConduitConfigParserTags {
     // get sources for each stream
     String streamName = el.getAttribute(NAME);
     String hcatEnabled = el.getAttribute(HCAT_ENABLED_PER_STREAM);
+    logger.info("AAAAAAAAAAAAAAAAAAAAAA hcatenable attribute for stream is " + hcatEnabled);
     boolean isHCatEnabled = false;
     if (hcatEnabled != null && !hcatEnabled.isEmpty()) {
       isHCatEnabled = Boolean.parseBoolean(hcatEnabled);
+      logger.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA setting isHcatEnabled " + isHCatEnabled);
     }
+    logger.info("AAAAAAAAAAAAAAAA after setting for stream : " + isHCatEnabled);
     NodeList sourceList = el.getElementsByTagName(SOURCE);
     for (int i = 0; i < sourceList.getLength(); i++) {
       Element source = (Element) sourceList.item(i);

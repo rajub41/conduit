@@ -193,6 +193,11 @@ public class MirrorStreamService extends DistcpBaseService {
       String streamName = getTopicNameFromDestnPath(entry.getValue());
       if (entry.getKey().isDir()) {
         retriableMkDirs(getDestFs(), entry.getValue(), streamName);
+        if (streamHcatEnableMap.containsKey(streamName)
+            && streamHcatEnableMap.get(streamName)) {
+          LOG.info("Hcat is not enabled for " + streamName + " stream");
+          publishPartitions(entry.getValue(), streamName);
+        }
         //publishPartitions(entry.getValue(), streamName);
         ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
             streamName, 1);
@@ -203,7 +208,12 @@ public class MirrorStreamService extends DistcpBaseService {
           continue;
         }
         retriableMkDirs(getDestFs(), entry.getValue().getParent(), streamName);
-        //publishPartitions(entry.getValue(), streamName);
+        if (streamHcatEnableMap.containsKey(streamName)
+            && streamHcatEnableMap.get(streamName)) {
+          LOG.info("Hcat is not enabled for " + streamName + " stream");
+          publishPartitions(entry.getValue(), streamName);
+        }
+       // publishPartitions(entry.getValue(), streamName);
         if (retriableRename(getDestFs(), entry.getKey().getPath(),
             entry.getValue(), streamName) == false) {
           LOG.warn("Failed to rename.Aborting transaction COMMIT to avoid "
