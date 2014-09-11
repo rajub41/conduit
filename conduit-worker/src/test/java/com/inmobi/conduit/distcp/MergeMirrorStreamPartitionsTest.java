@@ -139,12 +139,41 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
 
     }
 
-    LOG.info("Cleaning up leftovers");
+    LOG.info("Running LocalStream Service");
 
     for (TestLocalStreamService service : localStreamServices) {
+      Thread.currentThread().setName(service.getName());
+      service.runPreExecute();
+      service.runExecute();
+      service.runPostExecute();
+    }
+
+    LOG.info("Running MergedStream Service");
+
+    for (TestMergedStreamService service : mergedStreamServices) {
+      Thread.currentThread().setName(service.getName());
+      service.runPreExecute();
+      service.runExecute();
+      service.runPostExecute();
+
+    }
+    
+    LOG.info("Running MirrorStreamService Service");
+    
+    for (TestMirrorStreamService service : mirrorStreamServices) {
+      Thread.currentThread().setName(service.getName());
+      service.runPreExecute();
+      service.runExecute();
+      service.runPostExecute();
+
+    }
+
+    LOG.info("Cleaning up leftovers");
+
+    /*for (TestLocalStreamService service : localStreamServices) {
       service.getFileSystem().delete(
           new Path(service.getCluster().getRootDir()), true);
-    } 
+    } */
   }
 
   private void initializeConduit(String filename, String currentClusterName,
@@ -210,8 +239,8 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
         String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
         TestLocalPartition.setHCatClient(DB_NAME);
         LOG.info("AAAAAAAAAAAAAAAAAa going to ceate partition with " + DB_NAME + "   " + tableName + "  " + location + "   " + partSpec);
-        TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
-            partSpec);
+        /*TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
+            partSpec);*/
       }
       localStreamServices.add(service);
       service.prepareLastAddedPartitionMap();
@@ -303,9 +332,9 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
           Path streamPath = new Path(destRootDir, stream);
           String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
           try {
-            TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
+            /*TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
                 partSpec);
-          } catch (Exception e) {
+         */ } catch (Exception e) {
             if (e.getCause() instanceof AlreadyExistsException) {
               LOG.warn("AAAAAAAAAAAAAAAAa Partition already exists in the table : " + partSpec + "   " + tableName );
             } else {
@@ -341,11 +370,11 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
             }
           }
           Path streamPath = new Path(destRootDir, stream);
-          String location = new Path(streamPath, dateStr).toString();
+          String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
           try {
-            TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
+         /*   TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
                 partSpec);
-          } catch (Exception e) {
+        */  } catch (Exception e) {
             if (e.getCause() instanceof AlreadyExistsException) {
               LOG.warn("AAAAAAAAAAAAAAAAa Partition already exists in the table : " + partSpec + "   " + tableName );
             } else {
