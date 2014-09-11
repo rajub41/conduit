@@ -276,7 +276,7 @@ public class MirrorStreamService extends DistcpBaseService {
         retriableMkDirs(getDestFs(), entry.getValue(), streamName);
         if (streamHcatEnableMap.containsKey(streamName)
             && streamHcatEnableMap.get(streamName)) {
-          LOG.info("Hcat is not enabled for " + streamName + " stream");
+          LOG.info("Hcat is enabled for " + streamName + " stream");
           publishPartitions(entry.getValue(), streamName);
         }
         //publishPartitions(entry.getValue(), streamName);
@@ -291,7 +291,7 @@ public class MirrorStreamService extends DistcpBaseService {
         retriableMkDirs(getDestFs(), entry.getValue().getParent(), streamName);
         if (streamHcatEnableMap.containsKey(streamName)
             && streamHcatEnableMap.get(streamName)) {
-          LOG.info("Hcat is not enabled for " + streamName + " stream");
+          LOG.info("Hcat is enabled for " + streamName + " stream");
           publishPartitions(entry.getValue(), streamName);
         }
        // publishPartitions(entry.getValue(), streamName);

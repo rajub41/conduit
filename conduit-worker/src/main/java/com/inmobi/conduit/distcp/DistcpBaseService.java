@@ -61,7 +61,7 @@ public abstract class DistcpBaseService extends AbstractService {
   private final FileSystem destFs;
   protected final CheckpointProvider provider;
   protected Map<String, Path> checkPointPaths = new HashMap<String, Path>();
-  private static final int DEFAULT_NUM_DIR_PER_DISTCP_STREAM = 200;
+  private static final int DEFAULT_NUM_DIR_PER_DISTCP_STREAM = 30;
 
   protected static final Log LOG = LogFactory.getLog(DistcpBaseService.class);
   private final int numOfDirPerDistcpPerStream;

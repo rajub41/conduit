@@ -291,7 +291,7 @@ public class MergedStreamService extends DistcpBaseService {
         LOG.info("Last added partition : [" + getLogDateString(lastAddedTime) + "]");
         while (isMissingPartitions(commitTime, nextPartitionTime)) {
           String missingPartition = Cluster.getDestDir(
-              srcCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
+              destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
           try {
             LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAA misssing partition : " + missingPartition);
             if (addPartition(missingPartition, streamName, nextPartitionTime,
