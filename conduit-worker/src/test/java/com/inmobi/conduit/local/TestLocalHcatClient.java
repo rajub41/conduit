@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
 import org.testng.Assert;
 
 public class TestLocalHcatClient {
-  private static final Log LOG = LogFactory.getLog(TestLocalHcatClient.class);
+  /*private static final Log LOG = LogFactory.getLog(TestLocalHcatClient.class);
   private static final int msPort = 20102;
   private static HiveConf hcatConf;
   private static SecurityManager securityManager;
@@ -85,7 +85,7 @@ public class TestLocalHcatClient {
         + msPort);
   }
 
-  /*  public static String fixPath(String path) {
+    public static String fixPath(String path) {
     if(!Shell.WINDOWS) {
       return path;
     }
@@ -95,7 +95,7 @@ public class TestLocalHcatClient {
     }
     return expectedDir;
   }
-   */  
+     
  // @Test
   public void testBasicDDLCommands() throws Exception {
     String db = "testdb";
@@ -121,7 +121,7 @@ public class TestLocalHcatClient {
     Assert.assertTrue(testDb.getProperties().size() == 0);
     //    String warehouseDir = System
     //    .getProperty("test.warehouse.dir", "/user/hive/warehouse");
-    /*    String expectedDir = fixPath(warehouseDir).replaceFirst("pfile:///", "pfile:/");
+        String expectedDir = fixPath(warehouseDir).replaceFirst("pfile:///", "pfile:/");
     Assert.assertEquals(expectedDir + "/" + db + ".db", testDb.getLocation());
     ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
     cols.add(new HCatFieldSchema("id", Type.INT, "id comment"));
@@ -129,7 +129,7 @@ public class TestLocalHcatClient {
     HCatCreateTableDesc tableDesc = HCatCreateTableDesc
       .create(db, tableOne, cols).fileFormat("rcfile").build();
     client.createTable(tableDesc);
-     */   /* HCatTable table1 = client.getTable(db, tableOne);
+         HCatTable table1 = client.getTable(db, tableOne);
     assertTrue(table1.getInputFileFormat().equalsIgnoreCase(
       RCFileInputFormat.class.getName()));
     assertTrue(table1.getOutputFileFormat().equalsIgnoreCase(
@@ -149,7 +149,7 @@ public class TestLocalHcatClient {
     }
 
     client.dropTable(db, tableOne, true);
-      */   /* HCatCreateTableDesc tableDesc2 = HCatCreateTableDesc.create(db,
+          HCatCreateTableDesc tableDesc2 = HCatCreateTableDesc.create(db,
       tableTwo, cols).fieldsTerminatedBy('\001').escapeChar('\002').linesTerminatedBy('\003').
       mapKeysTerminatedBy('\004').collectionItemsTerminatedBy('\005').nullDefinedAs('\006').build();
     client.createTable(tableDesc2);
@@ -172,7 +172,7 @@ public class TestLocalHcatClient {
     assertEquals("checking " + serdeConstants.SERIALIZATION_NULL_FORMAT, Character.toString('\006'),
       table2.getSerdeParams().get(serdeConstants.SERIALIZATION_NULL_FORMAT));
 
-    assertEquals((expectedDir + "/" + db + ".db/" + tableTwo).toLowerCase(), table2.getLocation().toLowerCase());*/
+    assertEquals((expectedDir + "/" + db + ".db/" + tableTwo).toLowerCase(), table2.getLocation().toLowerCase());
    // client.close();
   }
 
@@ -238,7 +238,7 @@ LOG.info("AAAAAAAAAAAAAAAAAAA db is created ");
     } catch (HCatException e) {
       LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA exception while dropping twice " + e.getCause());
     }
-    /*
+    
     Map<String, String> secondPtn = new HashMap<String, String>();
     secondPtn.put("dt", "04/12/2012");
     secondPtn.put("country", "brazil");
@@ -273,10 +273,10 @@ LOG.info("AAAAAAAAAAAAAAAAAAA db is created ");
       PartitionEventType.LOAD_DONE);
     boolean isMarked = client.isPartitionMarkedForEvent(dbName, tableName,
       thirdPtn, PartitionEventType.LOAD_DONE);
-    assertTrue(isMarked); */
+    assertTrue(isMarked); 
     client.close();
   }
-
+*/
 
 
 }

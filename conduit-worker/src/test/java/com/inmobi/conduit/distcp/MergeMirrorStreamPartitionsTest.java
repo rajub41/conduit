@@ -21,8 +21,10 @@ import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.inmobi.conduit.Cluster;
@@ -53,18 +55,19 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
   private static final String TABLE_NAME_PREFIX = "conduit";
   private static final String LOCAL_TABLE_NAME_PREFIX = TABLE_NAME_PREFIX + "_local";
 
-  @BeforeSuite
+  @BeforeTest
   public void setup() throws Exception{
+    
+    // clean up the test data if any thing is left in the previous runs
+   // cleanup();
+    super.setup(2, 6, 1);
+    System.setProperty(ConduitConstants.AUDIT_ENABLED_KEY, "true");
     Properties prop = new Properties();
     prop.setProperty("com.inmobi.conduit.metrics.enabled", "true");
     prop.setProperty("com.inmobi.conduit.metrics.slidingwindowtime", "100000000");
     ConduitMetrics.init(prop);
     ConduitMetrics.startAll();
     
-    // clean up the test data if any thing is left in the previous runs
-    cleanup();
-    super.setup(2, 6, 1);
-    System.setProperty(ConduitConstants.AUDIT_ENABLED_KEY, "true");
     Conduit.setHCatEnabled(true);
 
     TestHCatUtil testHCatUtil = new TestHCatUtil();
@@ -83,10 +86,13 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
     hcatUtilList.add(hcatUtil2);
   }
 
-  @AfterSuite
+  @AfterTest
   public void cleanup() throws Exception{
     ConduitMetrics.stopAll();
-    Conduit.setHCatEnabled(false);
+    //Conduit.setHCatEnabled(false);
+    for (HCatClientUtil hcatUtil : hcatUtilList) {
+      hcatUtil.close();
+    }
     super.cleanup();
   }
 
@@ -174,10 +180,10 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
 */
     LOG.info("Cleaning up leftovers");
 
-    /*for (TestLocalStreamService service : localStreamServices) {
+    for (TestLocalStreamService service : localStreamServices) {
       service.getFileSystem().delete(
           new Path(service.getCluster().getRootDir()), true);
-    } */
+    } 
   }
 
   private void initializeConduit(String filename, String currentClusterName,
@@ -303,15 +309,6 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
      // TestHCatUtil.submitBack(hcatClientUtil, hcatClient);
       //  TestHCatUtil.createDataBase(DB_NAME, hcatClient);
       String destRootDir = cluster.getFinalDestDirRoot();
-      /* for (String stream : streamsToProcessLocal) {
-         String tableName = TABLE_NAME_PREFIX + "_" + stream;
-         TestHCatUtil.createTable(hcatClient, DB_NAME, tableName, ptnCols);
-         Path streamPath = new Path(destRootDir, stream);
-         String location = new Path(streamPath, dateStr).toString();
-         TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
-             partSpec);
-       }*/
-      //int j= 0;
       for (String remote : mergedStreamRemoteClusters) {
         //HCatClientUtil hcatUtil = hcatUtilList.get(j++);
         //HCatClient hcatClient1 = TestHCatUtil.getHCatClient(hcatUtil);

@@ -34,7 +34,7 @@ public class TestMirrorPartition extends TestMirrorStreamService {
     // TODO Auto-generated constructor stub
   }
 
-  @BeforeTest
+  /*//@BeforeTest
   public void setup() {
     //Conduit.setHCatEnabled(true);
    // Conduit.setHcatDBName("test_conduit");
@@ -44,7 +44,8 @@ public class TestMirrorPartition extends TestMirrorStreamService {
   public void close() {
     
   }
-  @Override
+  
+*/  @Override
   protected void postExecute() throws InterruptedException {
     
     LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA post execute in mirror  stream parititons");

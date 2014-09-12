@@ -42,7 +42,7 @@ import com.inmobi.conduit.distcp.TestMirrorPartition;
 import com.inmobi.conduit.distcp.TestMirrorStreamService;
 
 public class LocalStreamPartitionTest extends TestMiniClusterUtil {
-  private static final Log LOG = LogFactory.getLog(LocalStreamPartitionTest.class);
+  /*private static final Log LOG = LogFactory.getLog(LocalStreamPartitionTest.class);
   private static final int msPort = 20104;
   private static final int msPort1 = 20105;
   private static HiveConf hcatConf;
@@ -319,19 +319,19 @@ LOG.info("AAAAAAAAAAAAAAAAAAA clinet 2 db is created ");
         // set BYTES_PER_MAPPER to a lower value for test
         service.setBytesPerMapper(100);
         service.execute();
-        /* If throttle is true then need to run the LocalStreamService
+         If throttle is true then need to run the LocalStreamService
            max(total num of files per stream / files per stream) times to process all files
-         */
+         
         if (throttle) {
           service.execute();
         }
         long finishTime = System.currentTimeMillis();
         service.postExecute();
         Thread.sleep(1000);
-        /*
+        
          * check for number of times local stream service should run and no need
          * of waiting if it is the last run of service
-         */
+         
         if (timesToRun > 1 && (i < (timesToRun - 1))) {
           long sleepTime = service.getMSecondsTillNextRun(finishTime);
           Thread.sleep(sleepTime);
@@ -349,9 +349,9 @@ LOG.info("AAAAAAAAAAAAAAAAAAA clinet 2 db is created ");
         mirrorService.runExecute();
         mirrorService.runPostExecute();
       }
-     /* service.getFileSystem().delete(
-          new Path(service.getCluster().getRootDir()), true);*/
+      service.getFileSystem().delete(
+          new Path(service.getCluster().getRootDir()), true);
     
   }
-
+*/
 }

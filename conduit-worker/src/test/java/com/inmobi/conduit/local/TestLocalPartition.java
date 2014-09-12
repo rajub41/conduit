@@ -11,6 +11,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 
 import com.inmobi.conduit.CheckpointProvider;
@@ -35,13 +36,18 @@ public class TestLocalPartition extends TestLocalStreamService {
     super(config, srcCluster, currentCluster, provider, streamsToProcess, hcatUtil);
     this.streamsToProcess = streamsToProcess;
   }
-  
+  /*
   @BeforeTest
-  public void setup() {
+  public void setup() throws Exception {
     //Conduit.setHCatEnabled(true);
    // Conduit.setHcatDBName("test_conduit");
   }
   
+  @AfterTest
+  public void cleanup() throws Exception  {
+    
+  }
+  */
   @Override
   protected void postExecute() throws InterruptedException {
     
