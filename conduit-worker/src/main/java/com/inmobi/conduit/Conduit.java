@@ -115,9 +115,10 @@ public class Conduit implements Service, ConduitConstants {
 
   protected List<AbstractService> init() throws Exception {
     Cluster currentCluster = null;
-    
-    createHCatUtil();
-    
+    if (isHCatEnabled) {
+      createHCatUtil();
+    }
+
     if (currentClusterName != null) {
       currentCluster = config.getClusters().get(currentClusterName);
     }
@@ -252,7 +253,6 @@ public class Conduit implements Service, ConduitConstants {
   }
 
   protected void createHCatUtil() {
-    if (isHCatEnabled) {
       HiveConf conf = new HiveConf();
       String metastoreUrl = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
       if (metastoreUrl == null) {
@@ -260,7 +260,7 @@ public class Conduit implements Service, ConduitConstants {
       }
       LOG.info("hive metastore uri is : " + metastoreUrl);
       hcatUtil = new HCatClientUtil(metastoreUrl);
-    }
+    
   }
 
   private void prepareLastAddedPartitions() {

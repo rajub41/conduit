@@ -45,7 +45,7 @@ import org.testng.annotations.Test;
 import com.inmobi.conduit.Cluster;
 
 
-//@Test
+@Test
 public class DataPurgerServiceTest {
   private static Logger LOG = Logger.getLogger(DataPurgerServiceTest.class);
   DateFormat dateFormat = new SimpleDateFormat("yyyy:MM:dd:HH:mm");

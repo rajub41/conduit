@@ -94,6 +94,8 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
       hcatUtil.close();
     }
     super.cleanup();
+    Conduit.setHCatEnabled(false);
+    LOG.info("AAAAAAAAAAAAAAAAAAAAAAA after resetting test hcat enable : " + Conduit.isHCatEnabled());
   }
 
   @Test

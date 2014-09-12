@@ -476,9 +476,10 @@ public class DataPurgerService extends AbstractService {
     HCatClient hcatClient = null;
     if (Conduit.isHCatEnabled()) {
       hcatClient = getHCatClient();
-    }
+    
     if (hcatClient == null) {
       return;
+    }
     }
     /* Set<Map.Entry<String, Set<Map<String, String>>>> entrySet = partitionsToPurge.entrySet();
 
