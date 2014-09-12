@@ -20,7 +20,9 @@ import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.inmobi.conduit.Cluster;
@@ -51,8 +53,8 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
   private static final String TABLE_NAME_PREFIX = "conduit";
   private static final String LOCAL_TABLE_NAME_PREFIX = TABLE_NAME_PREFIX + "_local";
 
-  @BeforeMethod
-  public void beforeTest() throws Exception{
+  @BeforeSuite
+  public void setup() throws Exception{
     Properties prop = new Properties();
     prop.setProperty("com.inmobi.conduit.metrics.enabled", "true");
     prop.setProperty("com.inmobi.conduit.metrics.slidingwindowtime", "100000000");
@@ -81,10 +83,11 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
     hcatUtilList.add(hcatUtil2);
   }
 
-  @AfterMethod
-  public void afterTest() throws Exception{
+  @AfterSuite
+  public void cleanup() throws Exception{
     ConduitMetrics.stopAll();
     Conduit.setHCatEnabled(false);
+    super.cleanup();
   }
 
   @Test
@@ -139,7 +142,7 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
       service.runPostExecute();
 
     }
-
+/*
     LOG.info("Running LocalStream Service");
 
     for (TestLocalStreamService service : localStreamServices) {
@@ -168,7 +171,7 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
       service.runPostExecute();
 
     }
-
+*/
     LOG.info("Cleaning up leftovers");
 
     /*for (TestLocalStreamService service : localStreamServices) {

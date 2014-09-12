@@ -11,8 +11,6 @@ import com.inmobi.conduit.metrics.ConduitMetrics;
 import com.inmobi.messaging.Message;
 import com.inmobi.messaging.util.AuditUtil;
 
-import junit.framework.Assert;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -20,6 +18,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
+import org.testng.Assert;
 import org.testng.annotations.*;
 
 import java.io.File;

@@ -4,7 +4,7 @@ import com.inmobi.conduit.Cluster;
 import com.inmobi.conduit.ConduitConfigParser;
 import com.inmobi.conduit.metrics.ConduitMetrics;
 import com.inmobi.conduit.utils.CalendarHelper;
-import junit.framework.Assert;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -14,6 +14,7 @@ import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.log4j.Logger;
+import org.testng.Assert;
 import org.testng.annotations.*;
 
 import java.io.IOException;

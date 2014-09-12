@@ -9,6 +9,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 
 import com.inmobi.conduit.Cluster;
@@ -39,6 +40,10 @@ public class TestMirrorPartition extends TestMirrorStreamService {
    // Conduit.setHcatDBName("test_conduit");
   }
   
+  @AfterTest
+  public void close() {
+    
+  }
   @Override
   protected void postExecute() throws InterruptedException {
     

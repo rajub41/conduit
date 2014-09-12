@@ -61,8 +61,8 @@ public class MergedStreamService extends DistcpBaseService {
 
   private static final Log LOG = LogFactory.getLog(MergedStreamService.class);
   
-  public static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
-  public static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
+  public static Map<String, Long> lastAddedPartitionMap;
+  public static Map<String, Boolean> streamHcatEnableMap;
   protected static boolean failedTogetPartitions = false;
 
  /* protected void prepareStreamHcatEnableMap() {
@@ -166,6 +166,8 @@ public class MergedStreamService extends DistcpBaseService {
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
     }
+    streamHcatEnableMap = new HashMap<String, Boolean>();
+    lastAddedPartitionMap = new HashMap<String, Long>();
   }
 
   @Override

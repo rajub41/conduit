@@ -60,8 +60,8 @@ import com.inmobi.conduit.utils.DatePathComparator;
 public class MirrorStreamService extends DistcpBaseService {
   private static final Log LOG = LogFactory.getLog(MirrorStreamService.class);
 
-  public static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
-  public static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
+  public static Map<String, Long> lastAddedPartitionMap;
+  public static Map<String, Boolean> streamHcatEnableMap;
   protected static boolean failedTogetPartitions = false;
 
 /*  protected void prepareStreamHcatEnableMap() {
@@ -160,6 +160,8 @@ public class MirrorStreamService extends DistcpBaseService {
           COMMIT_TIME, eachStream);
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
+      streamHcatEnableMap = new HashMap<String, Boolean>();
+      lastAddedPartitionMap = new HashMap<String, Long>();
     }
   }
 
