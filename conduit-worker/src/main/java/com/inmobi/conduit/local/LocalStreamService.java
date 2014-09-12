@@ -82,7 +82,7 @@ import com.inmobi.conduit.utils.FileUtil;
  */
 
 public class LocalStreamService extends AbstractService implements
-    ConfigConstants {
+ConfigConstants {
 
   private static final Log LOG = LogFactory.getLog(LocalStreamService.class);
 
@@ -170,29 +170,29 @@ public class LocalStreamService extends AbstractService implements
 
   public void prepareLastAddedPartitionMap() throws InterruptedException {
     // TODO re-factor this method name if required
-     prepareStreamHcatEnableMap();
+    prepareStreamHcatEnableMap();
 
-     HCatClient hcatClient = getHCatClient();
-     if (hcatClient == null) {
-       return;
-     }
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
 
-     for (String stream : streamsToProcess) {
-       if (streamHcatEnableMap.get(stream)) {
-         try {
-           // TODO rename if required
-           findLastPartition(hcatClient, stream);
-         } catch (HCatException e) {
-           LOG.warn("Got Exception while finding hte last added partition for"
-               + " each stream");
-           failedTogetPartitions = true;
-           e.printStackTrace();
-         }
-       } else {
-         LOG.info("Hcatalog is not enabled for " + stream + " stream");
-       }
-     }
-     submitBack(hcatClient);
+    for (String stream : streamsToProcess) {
+      if (streamHcatEnableMap.get(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          failedTogetPartitions = true;
+          e.printStackTrace();
+        }
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
+      }
+    }
+    submitBack(hcatClient);
   }
 
 
@@ -201,18 +201,16 @@ public class LocalStreamService extends AbstractService implements
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
         Conduit.getHcatDBName(), getTableName(stream));
     if (hCatPartitionList.isEmpty()) {
-      LOG.info("No partitions present for " + stream + " streammm ");
+      LOG.info("No partitions present for " + stream + " stream ");
       lastAddedPartitionMap.put(stream, (long) -1);
       return;
-      //continue;
-    } else {
-      LOG.info("AAAAAAAAAAAAAAA list of partitions for finding last " + hCatPartitionList + "   size: " + hCatPartitionList.size());
     }
     Collections.sort(hCatPartitionList, new HCatPartitionComparator());
     HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
     Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
         lastHcatPartition.getLocation(), stream);
     if (lastAddedPartitionDate != null) {
+      LOG.info("Last added to partition " + lastAddedPartitionDate + " for " + stream + " stream ");
       lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
     } else {
       // if there are no partitions in the hcatalog table then it should create partitions from current time
@@ -230,13 +228,11 @@ public class LocalStreamService extends AbstractService implements
         streamHcatEnableMap.put(stream, false);
       }
     }
-    LOG.info("AAAAAAAAAAAAAAAA stream hcat enable map : " + streamHcatEnableMap);
+    LOG.info("Hcat enable map for local stream : " + streamHcatEnableMap);
   }
 
   private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
     String streamRootDirPrefix = new Path(srcCluster.getLocalFinalDestDirRoot(), stream).toString();
-    LOG.info("AAAAAAAAAAAAAAAAAAa find the time stamp from : " + lastHcatPartitionLoc + "   stream " + streamRootDirPrefix);
-
     Date lastAddedPartitionDate = CalendarHelper.getDateFromStreamDir(
         streamRootDirPrefix, lastHcatPartitionLoc);
     return lastAddedPartitionDate;
@@ -268,8 +264,7 @@ public class LocalStreamService extends AbstractService implements
           lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
           LOG.info("there are no partitions in "+ getTableName(streamName) +" table. ");
           return;
-        } else {
-          // TODO 
+        } else { 
           try {
             findLastPartition(hcatClient, streamName);
             lastAddedTime = lastAddedPartitionMap.get(streamName);
@@ -279,42 +274,37 @@ public class LocalStreamService extends AbstractService implements
               return;
             }
           } catch (HCatException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Got exception while trying to get the last added partition ", e);
             return;
           }
         }
       }
       long nextPartitionTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
       if (isMissingPartitions(commitTime, nextPartitionTime)) {
-        LOG.debug("Previous Runtime: [" + getLogDateString(lastAddedTime) + "]");
+        LOG.debug("Previous partition time: [" + getLogDateString(lastAddedTime) + "]");
         while (isMissingPartitions(commitTime, nextPartitionTime)) {
           String missingPartition = Cluster.getDestDir(
               srcCluster.getLocalFinalDestDirRoot(), streamName, nextPartitionTime);
           try {
-            LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAA misssing partition : " + missingPartition);
             if (addPartition(missingPartition, streamName, nextPartitionTime,
                 getTableName(streamName), hcatClient)) {
               lastAddedPartitionMap.put(streamName, nextPartitionTime);
             } else {
-              LOG.error("Exception occured while trying to add partition ");
+              LOG.error("Got an error while trying to add partition " + missingPartition);
               break;
             }
             nextPartitionTime = nextPartitionTime + MILLISECONDS_IN_MINUTE;
           } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             break;
           } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.warn("Got exception while trying to parse ", e);
             break;
           }
         }
       }
     } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      LOG.warn("Got Exception while publishing partition ", e);
     } finally {
       submitBack(hcatClient);     
     }
@@ -603,7 +593,7 @@ public class LocalStreamService extends AbstractService implements
         String currentFile = getCurrentFile(fs, files, sortedFiles);
         LOG.debug("last file " + currentFile + " in the collector directory "
             + collector.getPath());
-        
+
         Iterator<FileStatus> it = sortedFiles.iterator();
         numberOfFilesProcessed = 0;
         long latestCollectorFileTimeStamp = -1;
@@ -761,7 +751,7 @@ public class LocalStreamService extends AbstractService implements
     // then null (implying process this file as non-current file)
     // else
     // return last file as the current file
-    
+
     if (files == null || files.length == 0)
       return null;
     for (FileStatus file : files) {

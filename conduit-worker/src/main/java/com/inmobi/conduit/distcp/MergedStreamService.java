@@ -44,8 +44,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
-import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
@@ -106,6 +104,10 @@ public class MergedStreamService extends DistcpBaseService {
     submitBack(hcatClient);
   }
 
+  protected void updateLastAddedPartitionMap(String stream, long partTime) {
+    lastAddedPartitionMap.put(stream, (long) -1);
+  }
+/*
   protected void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
@@ -120,16 +122,14 @@ public class MergedStreamService extends DistcpBaseService {
     Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
         lastHcatPartition.getLocation(), stream);
     if (lastAddedPartitionDate != null) {
-      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + lastAddedPartitionDate.getTime());
       lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
     } else {
       // if there are no partitions in the hcatalog table then it should create partitions from current time
-      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + (-1));
       lastAddedPartitionMap.put(stream, (long) -1);
     }
   }
 
-  public MergedStreamService(ConduitConfig config, Cluster srcCluster,
+*/  public MergedStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
       CheckpointProvider provider, Set<String> streamsToProcess,
       HCatClientUtil hcatUtil) throws Exception {
@@ -262,11 +262,9 @@ public class MergedStreamService extends DistcpBaseService {
     }
     try {
       long lastAddedTime = lastAddedPartitionMap.get(streamName);
-      LOG.info("AAAAAAAAAAAAAAAAAAA lastadded partition time : " + lastAddedTime);
       if (lastAddedTime == -1) {
         if (!failedTogetPartitions) {
           lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
-          LOG.info("AAAAAAAAAAAAAAAAAAA lastadded partition time : not failed  " + lastAddedTime);
           return;
         } else {
           // TODO 
@@ -275,8 +273,6 @@ public class MergedStreamService extends DistcpBaseService {
             lastAddedTime = lastAddedPartitionMap.get(streamName);
             if (lastAddedTime == -1) {
               lastAddedPartitionMap.put(streamName, commitTime - MILLISECONDS_IN_MINUTE);
-              LOG.info("AAAAAAAAAAAAAAAAAAA lastadded partition time  failed : " + lastAddedTime);
-
               return;
             }
           } catch (HCatException e) {
@@ -293,7 +289,6 @@ public class MergedStreamService extends DistcpBaseService {
           String missingPartition = Cluster.getDestDir(
               destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
           try {
-            LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAA misssing partition : " + missingPartition);
             if (addPartition(missingPartition, streamName, nextPartitionTime,
                 getTableName(streamName), hcatClient)) {
               lastAddedPartitionMap.put(streamName, nextPartitionTime);
@@ -310,7 +305,6 @@ public class MergedStreamService extends DistcpBaseService {
         }
       }
     } catch (Exception e) {
-
       // TODO Auto-generated catch block
       e.printStackTrace();
     } finally {

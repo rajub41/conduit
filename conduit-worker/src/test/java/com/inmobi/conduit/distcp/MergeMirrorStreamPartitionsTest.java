@@ -239,8 +239,8 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
         String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
         TestLocalPartition.setHCatClient(DB_NAME);
         LOG.info("AAAAAAAAAAAAAAAAAa going to ceate partition with " + DB_NAME + "   " + tableName + "  " + location + "   " + partSpec);
-        /*TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
-            partSpec);*/
+        TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
+            partSpec);
       }
       localStreamServices.add(service);
       service.prepareLastAddedPartitionMap();
@@ -332,9 +332,9 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
           Path streamPath = new Path(destRootDir, stream);
           String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
           try {
-            /*TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
+            TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
                 partSpec);
-         */ } catch (Exception e) {
+          } catch (Exception e) {
             if (e.getCause() instanceof AlreadyExistsException) {
               LOG.warn("AAAAAAAAAAAAAAAAa Partition already exists in the table : " + partSpec + "   " + tableName );
             } else {
@@ -372,9 +372,9 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
           Path streamPath = new Path(destRootDir, stream);
           String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
           try {
-         /*   TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
+            TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
                 partSpec);
-        */  } catch (Exception e) {
+          } catch (Exception e) {
             if (e.getCause() instanceof AlreadyExistsException) {
               LOG.warn("AAAAAAAAAAAAAAAAa Partition already exists in the table : " + partSpec + "   " + tableName );
             } else {

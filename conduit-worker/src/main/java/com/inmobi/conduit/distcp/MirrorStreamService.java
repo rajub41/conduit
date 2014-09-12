@@ -36,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
@@ -104,8 +103,11 @@ public class MirrorStreamService extends DistcpBaseService {
     submitBack(hcatClient);
   }
 
+  protected void updateLastAddedPartitionMap(String stream, long partTime) {
+    lastAddedPartitionMap.put(stream, partTime);
+  }
 
-  protected void findLastPartition(HCatClient hcatClient, String stream)
+/*  protected void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
         Conduit.getHcatDBName(), getTableName(stream));
@@ -119,16 +121,13 @@ public class MirrorStreamService extends DistcpBaseService {
     Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
         lastHcatPartition.getLocation(), stream);
     if (lastAddedPartitionDate != null) {
-      LOG.info("mirrorrrrrrrrrr AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + lastAddedPartitionDate.getTime());
       lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
     } else {
       // if there are no partitions in the hcatalog table then it should create partitions from current time
-      LOG.info("mirrorr    AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + (-1));
       lastAddedPartitionMap.put(stream, (long) -1);
     }
   }
-
-
+*/
   public MirrorStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
       CheckpointProvider provider, Set<String> streamsToProcess,
@@ -157,21 +156,17 @@ public class MirrorStreamService extends DistcpBaseService {
     long lastAddedTime = lastAddedPartitionMap.get(streamName);
     Path streamDirPrefix = new Path(destCluster.getFinalDestDirRoot(), streamName);
     Date fileTimeStamp = CalendarHelper.getDateFromStreamDir(streamDirPrefix, destPath);
-    LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAa filetime stamp : " + fileTimeStamp + "    AAAAAA " + lastAddedTime);
     long nextPartitionTime = fileTimeStamp.getTime() - MILLISECONDS_IN_MINUTE;
     HCatClient hcatClient = getHCatClient();
     if (hcatClient == null) {
       return;
     }
     try {
-      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa   last added time ::"
-          + "  nextAdded pat time  " +  lastAddedTime + "  :: " + nextPartitionTime + "    AAAA path : dest path " + destPath);
       if (lastAddedTime >= nextPartitionTime) {
         return;
       } else {
         String missingPartition = Cluster.getDestDir(
             destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
-        LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA missingpartition : " + missingPartition);
         try {
           addPartition(missingPartition, streamName, nextPartitionTime,
               getTableName(streamName), hcatClient);

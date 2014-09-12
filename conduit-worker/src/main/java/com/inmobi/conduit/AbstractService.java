@@ -375,7 +375,7 @@ public abstract class AbstractService implements Service, Runnable {
       long partTimeStamp, String tableName, HCatClient hcatClient)
           throws InterruptedException, ParseException {
     if (hcatClient == null) {
-      LOG.warn("Did not get hcatcleint for table " + tableName);
+      LOG.warn("Did not get hcat client for table " + tableName);
       return false;
     }
     String dbName = Conduit.getHcatDBName();
@@ -398,11 +398,12 @@ public abstract class AbstractService implements Service, Runnable {
               partSpec).build();
         }
         hcatClient.addPartition(partInfo);
-        LOG.info("  partition is added successfully : " + partInfo);
+        LOG.info("Added partition successfully : " + partInfo);
         return true;
       } catch (HCatException e) {
         if (e.getCause() instanceof AlreadyExistsException) {
-          LOG.info("partition " + partInfo + " already exists ", e);
+          LOG.info("Partition " + partInfo + " is already exists in "
+              + tableName + " table. ", e);
           return true;
         }
         failedCount++;

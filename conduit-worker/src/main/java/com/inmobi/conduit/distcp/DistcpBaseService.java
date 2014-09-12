@@ -140,13 +140,14 @@ public abstract class DistcpBaseService extends AbstractService {
     return true;
   }
 
-/*    protected void findLastPartition(HCatClient hcatClient, String stream)
+  protected void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
         Conduit.getHcatDBName(), getTableName(stream));
     if (hCatPartitionList.isEmpty()) {
       LOG.info("No partitions present for " + stream + " stream ");
-      lastAddedPartitionMap.put(stream, (long) -1);
+      updateLastAddedPartitionMap(stream, (long) -1);
+      //lastAddedPartitionMap.put(stream, (long) -1);
       return;
     }
     Collections.sort(hCatPartitionList, new HCatPartitionComparator());
@@ -155,14 +156,18 @@ public abstract class DistcpBaseService extends AbstractService {
         lastHcatPartition.getLocation(), stream);
     if (lastAddedPartitionDate != null) {
       LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + lastAddedPartitionDate.getTime());
-      lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+      updateLastAddedPartitionMap(stream, lastAddedPartitionDate.getTime());
+      //lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
     } else {
       // if there are no partitions in the hcatalog table then it should create partitions from current time
       LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + (-1));
-      lastAddedPartitionMap.put(stream, (long) -1);
+      updateLastAddedPartitionMap(stream, (long) -1);
+      //lastAddedPartitionMap.put(stream, (long) -1);
     }
   }
-*/
+
+  protected abstract void updateLastAddedPartitionMap(String stream, long l);
+
   protected String getTableName(String streamName) {
     StringBuilder sb = new StringBuilder();
     sb.append(TABLE_PREFIX);
