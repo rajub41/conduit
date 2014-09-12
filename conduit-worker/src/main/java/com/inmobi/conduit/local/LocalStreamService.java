@@ -167,7 +167,8 @@ ConfigConstants {
       fs.delete(tmpPath, true);
     }
   }
-
+/*
+  @Override
   public void prepareLastAddedPartitionMap() throws InterruptedException {
     // TODO re-factor this method name if required
     prepareStreamHcatEnableMap();
@@ -195,7 +196,7 @@ ConfigConstants {
     submitBack(hcatClient);
   }
 
-
+*//*
   private void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
@@ -218,7 +219,7 @@ ConfigConstants {
     }
   }
 
-  private void prepareStreamHcatEnableMap() {
+*/  protected void prepareStreamHcatEnableMap() {
     Map<String, SourceStream> sourceStreamMap = config.getSourceStreams();
     for (String stream : streamsToProcess) {
       if (sourceStreamMap.containsKey(stream)
@@ -231,19 +232,36 @@ ConfigConstants {
     LOG.info("Hcat enable map for local stream : " + streamHcatEnableMap);
   }
 
-  private Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
-    String streamRootDirPrefix = new Path(srcCluster.getLocalFinalDestDirRoot(), stream).toString();
+  protected Date getTimeStampFromHCatPartition(String lastHcatPartitionLoc, String stream) {
+    String streamRootDirPrefix = new Path(srcCluster.getLocalFinalDestDirRoot(),
+        stream).toString();
     Date lastAddedPartitionDate = CalendarHelper.getDateFromStreamDir(
         streamRootDirPrefix, lastHcatPartitionLoc);
     return lastAddedPartitionDate;
   }
 
-  private String getTableName(String streamName) {
+  protected String getTableName(String streamName) {
     StringBuilder sb = new StringBuilder();
     sb.append(LOCAL_TABLE_PREFIX);
     sb.append("_");
     sb.append(streamName);
     return sb.toString();
+  }
+
+  protected boolean isStreamHCatEnabled(String stream) {
+    return streamHcatEnableMap.get(stream);
+  }
+
+  protected void setFailedToGetPartitions(boolean failed) {
+    failedTogetPartitions = failed;
+  }
+  
+  protected void updateLastAddedPartitionMap(String stream, long partTime) {
+    lastAddedPartitionMap.put(stream, partTime);
+  }
+  
+  protected void updateStreamHCatEnabledMap(String stream, boolean hcatEnabled) {
+    streamHcatEnableMap.put(stream, hcatEnabled);
   }
 
   public void publishPartitions(long commitTime, String streamName)

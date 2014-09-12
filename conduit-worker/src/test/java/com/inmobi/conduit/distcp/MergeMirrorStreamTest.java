@@ -353,7 +353,7 @@ public class MergeMirrorStreamTest extends TestMiniClusterUtil {
     }
 
     LOG.info("Running MirrorStreamService Service");
-/*
+
     for (TestMirrorStreamService service : mirrorStreamServices) {
       Thread.currentThread().setName(service.getName());
       service.runPreExecute();
@@ -367,7 +367,7 @@ public class MergeMirrorStreamTest extends TestMiniClusterUtil {
     for (TestLocalStreamService service : localStreamServices) {
       service.getFileSystem().delete(
           new Path(service.getCluster().getRootDir()), true);
-    } */
+    } 
   }
 
   private void initializeConduit(String filename, String currentClusterName,

@@ -67,7 +67,7 @@ public abstract class DistcpBaseService extends AbstractService {
   private final int numOfDirPerDistcpPerStream;
   protected final Path jarsPath;
   protected final Path auditUtilJarDestPath;
-  
+
   public DistcpBaseService(ConduitConfig config, String name,
       Cluster srcCluster, Cluster destCluster, Cluster currentCluster,
       CheckpointProvider provider, Set<String> streamsToProcess,
@@ -140,6 +140,54 @@ public abstract class DistcpBaseService extends AbstractService {
     return true;
   }
 
+  protected void prepareStreamHcatEnableMap() {
+    Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
+    for (String stream : streamsToProcess) {
+      if (destStreamMap.containsKey(stream)
+          && destStreamMap.get(stream).isHCatEnabled()) {
+        updateStreamHCatEnabledMap(stream, true);
+      } else {
+        updateStreamHCatEnabledMap(stream, false);
+      }
+    }
+  }
+/*
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    // TODO re-factor this method name if required
+    prepareStreamHcatEnableMap();
+
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
+
+    for (String stream : streamsToProcess) {
+      if (isStreamHCatEnabled(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          setFailedToGetPartitions(true);
+          e.printStackTrace();
+        }
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
+      }
+    }
+    submitBack(hcatClient);
+  }
+*//*
+  protected abstract boolean isStreamHCatEnabled(String stream);
+
+  protected abstract void setFailedToGetPartitions(boolean b);
+
+  protected abstract void updateLastAddedPartitionMap(String stream, long partTime);
+
+  protected abstract void updateStreamHCatEnabledMap(String stream, boolean hcatEnabled);
+*/
+  /*
   protected void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
@@ -165,9 +213,7 @@ public abstract class DistcpBaseService extends AbstractService {
       //lastAddedPartitionMap.put(stream, (long) -1);
     }
   }
-
-  protected abstract void updateLastAddedPartitionMap(String stream, long l);
-
+*/
   protected String getTableName(String streamName) {
     StringBuilder sb = new StringBuilder();
     sb.append(TABLE_PREFIX);

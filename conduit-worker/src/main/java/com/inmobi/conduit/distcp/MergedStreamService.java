@@ -65,7 +65,7 @@ public class MergedStreamService extends DistcpBaseService {
   public static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
   protected static boolean failedTogetPartitions = false;
 
-  private void prepareStreamHcatEnableMap() {
+ /* protected void prepareStreamHcatEnableMap() {
     Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
     for (String stream : streamsToProcess) {
       if (destStreamMap.containsKey(stream)
@@ -75,8 +75,25 @@ public class MergedStreamService extends DistcpBaseService {
         streamHcatEnableMap.put(stream, false);
       }
     }
+  }*/
+
+  protected boolean isStreamHCatEnabled(String stream) {
+    return streamHcatEnableMap.get(stream);
   }
 
+  protected void setFailedToGetPartitions(boolean failed) {
+    failedTogetPartitions = failed;
+  }
+  
+  protected void updateLastAddedPartitionMap(String stream, long partTime) {
+    lastAddedPartitionMap.put(stream, partTime);
+  }
+  
+  protected void updateStreamHCatEnabledMap(String stream, boolean hcatEnabled) {
+    streamHcatEnableMap.put(stream, hcatEnabled);
+  }
+
+/*
   public void prepareLastAddedPartitionMap() throws InterruptedException {
     // TODO re-factor this method name if required
     prepareStreamHcatEnableMap();
@@ -104,9 +121,7 @@ public class MergedStreamService extends DistcpBaseService {
     submitBack(hcatClient);
   }
 
-  protected void updateLastAddedPartitionMap(String stream, long partTime) {
-    lastAddedPartitionMap.put(stream, (long) -1);
-  }
+*/
 /*
   protected void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
@@ -251,6 +266,7 @@ public class MergedStreamService extends DistcpBaseService {
 
   public void publishPartitions(long commitTime, String streamName)
       throws InterruptedException {
+    LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa   streamHcatEnableMap "+ streamHcatEnableMap);
     if (!streamHcatEnableMap.containsKey(streamName)
         || !streamHcatEnableMap.get(streamName)) {
       LOG.info("Hcat is not enabled for " + streamName + " stream");

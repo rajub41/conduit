@@ -58,7 +58,7 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
     prop.setProperty("com.inmobi.conduit.metrics.slidingwindowtime", "100000000");
     ConduitMetrics.init(prop);
     ConduitMetrics.startAll();
-
+    
     // clean up the test data if any thing is left in the previous runs
     cleanup();
     super.setup(2, 6, 1);
@@ -83,7 +83,8 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
 
   @AfterMethod
   public void afterTest() throws Exception{
-    ConduitMetrics.stopAll();;
+    ConduitMetrics.stopAll();
+    Conduit.setHCatEnabled(false);
   }
 
   @Test

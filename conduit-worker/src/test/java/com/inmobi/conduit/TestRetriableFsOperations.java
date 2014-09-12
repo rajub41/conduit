@@ -4,6 +4,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -152,14 +153,41 @@ public class TestRetriableFsOperations extends AbstractService {
 
   @Override
   public void prepareLastAddedPartitionMap() throws InterruptedException {
-    // TODO Auto-generated method stub
-    
   }
 
   @Override
   public void publishPartitions(long commitTime, String categoryName)
       throws InterruptedException {
-    // TODO Auto-generated method stub
-    
+  }
+
+  @Override
+  protected String getTableName(String stream) {
+    return null;
+  }
+
+  @Override
+  protected Date getTimeStampFromHCatPartition(String hcatLoc, String stream) {
+    return null;
+  }
+
+  @Override
+  protected void prepareStreamHcatEnableMap() {
+  }
+
+  @Override
+  protected boolean isStreamHCatEnabled(String stream) {
+    return false;
+  }
+
+  @Override
+  protected void setFailedToGetPartitions(boolean b) {
+  }
+
+  @Override
+  protected void updateLastAddedPartitionMap(String stream, long partTime) {
+  }
+
+  @Override
+  protected void updateStreamHCatEnabledMap(String stream, boolean hcatEnabled) {
   }
 }

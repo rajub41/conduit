@@ -126,7 +126,7 @@ public class LocalStreamPartitionTest extends TestMiniClusterUtil {
    
   }
 
-  @BeforeSuite
+  //@BeforeSuite
   public void setup() throws Exception {
     // clean up the test data if any thing is left in the previous runs
     cleanup();
@@ -247,12 +247,12 @@ LOG.info("AAAAAAAAAAAAAAAAAAA clinet 2 db is created ");
     TestMirrorPartition.setHCatClient(dbName1);
   }
 
-  @AfterSuite
+  //@AfterSuite
   public void cleanup() throws Exception {
     super.cleanup();
   }
 
-  @Test
+  //@Test
   private void testMapReduce() throws Exception {
 
     //String fileName = "test-lss-hcat-conduit.xml";

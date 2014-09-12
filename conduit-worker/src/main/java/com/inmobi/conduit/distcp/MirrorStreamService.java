@@ -59,12 +59,12 @@ import com.inmobi.conduit.utils.DatePathComparator;
 
 public class MirrorStreamService extends DistcpBaseService {
   private static final Log LOG = LogFactory.getLog(MirrorStreamService.class);
-  
+
   public static final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
   public static final Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
   protected static boolean failedTogetPartitions = false;
 
-  private void prepareStreamHcatEnableMap() {
+/*  protected void prepareStreamHcatEnableMap() {
     Map<String, DestinationStream> destStreamMap = destCluster.getDestinationStreams();
     for (String stream : streamsToProcess) {
       if (destStreamMap.containsKey(stream)
@@ -75,8 +75,8 @@ public class MirrorStreamService extends DistcpBaseService {
       }
     }
   }
-
-  public void prepareLastAddedPartitionMap() throws InterruptedException {
+*/
+  /*  public void prepareLastAddedPartitionMap() throws InterruptedException {
     // TODO re-factor this method name if required
     prepareStreamHcatEnableMap();
 
@@ -101,13 +101,25 @@ public class MirrorStreamService extends DistcpBaseService {
       }
     }
     submitBack(hcatClient);
+  }*/
+
+  protected boolean isStreamHCatEnabled(String stream) {
+    return streamHcatEnableMap.get(stream);
   }
 
   protected void updateLastAddedPartitionMap(String stream, long partTime) {
     lastAddedPartitionMap.put(stream, partTime);
   }
 
-/*  protected void findLastPartition(HCatClient hcatClient, String stream)
+  protected void setFailedToGetPartitions(boolean failed) {
+    failedTogetPartitions = failed;
+  }
+
+  protected void updateStreamHCatEnabledMap(String stream, boolean hcatEnabled) {
+    streamHcatEnableMap.put(stream, hcatEnabled);
+  }
+
+  /*  protected void findLastPartition(HCatClient hcatClient, String stream)
       throws HCatException {
     List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
         Conduit.getHcatDBName(), getTableName(stream));
@@ -127,7 +139,7 @@ public class MirrorStreamService extends DistcpBaseService {
       lastAddedPartitionMap.put(stream, (long) -1);
     }
   }
-*/
+   */
   public MirrorStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
       CheckpointProvider provider, Set<String> streamsToProcess,
@@ -289,7 +301,7 @@ public class MirrorStreamService extends DistcpBaseService {
           LOG.info("Hcat is enabled for " + streamName + " stream");
           publishPartitions(entry.getValue(), streamName);
         }
-       // publishPartitions(entry.getValue(), streamName);
+        // publishPartitions(entry.getValue(), streamName);
         if (retriableRename(getDestFs(), entry.getKey().getPath(),
             entry.getValue(), streamName) == false) {
           LOG.warn("Failed to rename.Aborting transaction COMMIT to avoid "
@@ -557,6 +569,6 @@ public class MirrorStreamService extends DistcpBaseService {
   public void publishPartitions(long commitTime, String categoryName)
       throws InterruptedException {
     // TODO Auto-generated method stub
-    
+
   }
 }

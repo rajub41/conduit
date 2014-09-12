@@ -49,13 +49,13 @@ public class TestLocalHcatClient {
     }
   }
 
-  @AfterTest
+  //@AfterTest
   public static void tearDown() throws Exception {
     LOG.info("Shutting down metastore.");
 //    System.setSecurityManager(securityManager);
   }
 
-  @BeforeClass
+  //@BeforeClass
   public static void startMetaStoreServer() throws Exception {
 
     Thread hcatServer = new Thread(new Runnable() {
@@ -96,7 +96,7 @@ public class TestLocalHcatClient {
     return expectedDir;
   }
    */  
-  @Test
+ // @Test
   public void testBasicDDLCommands() throws Exception {
     String db = "testdb";
     String tableOne = "testTable1";
@@ -176,7 +176,7 @@ public class TestLocalHcatClient {
    // client.close();
   }
 
-  @Test
+  //@Test
   public void testPartitionsHCatClientImpl() throws Exception {
     HCatClient client = HCatClient.create(new Configuration(hcatConf));
     String dbName = "ptnDB";

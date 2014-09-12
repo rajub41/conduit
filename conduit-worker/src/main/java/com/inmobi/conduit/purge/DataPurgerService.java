@@ -556,15 +556,51 @@ public class DataPurgerService extends AbstractService {
   }
 
   @Override
-  public void prepareLastAddedPartitionMap() throws InterruptedException {
-    // TODO Auto-generated method stub
-
+  public void publishPartitions(long commitTime, String categoryName)
+      throws InterruptedException {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");
   }
 
   @Override
-  public void publishPartitions(long commitTime, String categoryName)
-      throws InterruptedException {
-    // TODO Auto-generated method stub
+  protected String getTableName(String stream) {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");
+  }
 
+  @Override
+  protected Date getTimeStampFromHCatPartition(String hcatLoc, String stream) {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");
+  }
+
+  @Override
+  protected void prepareStreamHcatEnableMap() {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");
+  }
+
+  @Override
+  protected boolean isStreamHCatEnabled(String stream) {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");
+  }
+
+  @Override
+  protected void setFailedToGetPartitions(boolean b) {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");    
+  }
+
+  @Override
+  protected void updateLastAddedPartitionMap(String stream, long partTime) {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");
+  }
+
+  @Override
+  protected void updateStreamHCatEnabledMap(String stream, boolean hcatEnabled) {
+    throw new UnsupportedOperationException(" requested method is not" +
+        " implemented in purger service");
   }
 }

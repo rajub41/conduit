@@ -21,6 +21,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,6 +31,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import com.inmobi.conduit.utils.CalendarHelper;
+import com.inmobi.conduit.utils.HCatPartitionComparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +43,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
+import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.thrift.TSerializer;
 
@@ -148,7 +151,7 @@ public abstract class AbstractService implements Service, Runnable {
 
   public abstract long getMSecondsTillNextRun(long currentTime);
   
-  public abstract void prepareLastAddedPartitionMap() throws InterruptedException;
+  //public abstract void prepareLastAddedPartitionMap() throws InterruptedException;
 
   protected abstract void execute() throws Exception;
 
@@ -367,9 +370,78 @@ public abstract class AbstractService implements Service, Runnable {
     // even if prevRuntime is -1, since service did run at this point
     prevRuntimeForCategory.put(categoryName, commitTime);
   }
+  
+  public void prepareLastAddedPartitionMap() throws InterruptedException {
+    // TODO re-factor this method name if required
+    prepareStreamHcatEnableMap();
 
+    HCatClient hcatClient = getHCatClient();
+    if (hcatClient == null) {
+      return;
+    }
+
+    for (String stream : streamsToProcess) {
+      if (isStreamHCatEnabled(stream)) {
+        try {
+          // TODO rename if required
+          findLastPartition(hcatClient, stream);
+        } catch (HCatException e) {
+          LOG.warn("Got Exception while finding hte last added partition for"
+              + " each stream");
+          setFailedToGetPartitions(true);
+          e.printStackTrace();
+        }
+      } else {
+        LOG.info("Hcatalog is not enabled for " + stream + " stream");
+      }
+    }
+    submitBack(hcatClient);
+  }
+
+  protected void findLastPartition(HCatClient hcatClient, String stream)
+      throws HCatException {
+    List<HCatPartition> hCatPartitionList = hcatClient.getPartitions(
+        Conduit.getHcatDBName(), getTableName(stream));
+    if (hCatPartitionList.isEmpty()) {
+      LOG.info("No partitions present for " + stream + " stream ");
+      updateLastAddedPartitionMap(stream, (long) -1);
+      //lastAddedPartitionMap.put(stream, (long) -1);
+      return;
+    }
+    Collections.sort(hCatPartitionList, new HCatPartitionComparator());
+    HCatPartition lastHcatPartition = hCatPartitionList.get(hCatPartitionList.size()-1);
+    Date lastAddedPartitionDate = getTimeStampFromHCatPartition(
+        lastHcatPartition.getLocation(), stream);
+    if (lastAddedPartitionDate != null) {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + lastAddedPartitionDate.getTime());
+      updateLastAddedPartitionMap(stream, lastAddedPartitionDate.getTime());
+      //lastAddedPartitionMap.put(stream, lastAddedPartitionDate.getTime());
+    } else {
+      // if there are no partitions in the hcatalog table then it should create partitions from current time
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA find last added partition : " + (-1));
+      updateLastAddedPartitionMap(stream, (long) -1);
+      //lastAddedPartitionMap.put(stream, (long) -1);
+    }
+  }
+
+  protected abstract String getTableName(String stream);
+  
+  protected  abstract Date getTimeStampFromHCatPartition(String hcatLoc, String stream);
+  
   public abstract void publishPartitions(long commitTime,
       String categoryName) throws InterruptedException;
+
+  protected abstract void prepareStreamHcatEnableMap();
+
+  protected abstract boolean isStreamHCatEnabled(String stream);
+
+  protected abstract void setFailedToGetPartitions(boolean b);
+
+  protected abstract void updateLastAddedPartitionMap(String stream, long partTime);
+
+  protected abstract void updateStreamHCatEnabledMap(String stream,
+      boolean hcatEnabled);
+
 
   public boolean addPartition(String location, String streamName,
       long partTimeStamp, String tableName, HCatClient hcatClient)
