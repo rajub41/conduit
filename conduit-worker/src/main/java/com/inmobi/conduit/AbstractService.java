@@ -84,6 +84,8 @@ public abstract class AbstractService implements Service, Runnable {
   public final static String FILES_COPIED_COUNT = "filesCopied.count";
   public final static String DATAPURGER_SERVICE = "DataPurgerService";
   public final static String LAST_FILE_PROCESSED = "lastfile.processed";
+  protected static final String TABLE_PREFIX = "conduit";
+  protected static final String LOCAL_TABLE_PREFIX = TABLE_PREFIX + "_local";
   
   protected HCatClientUtil hcatUtil = null;
 

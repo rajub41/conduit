@@ -97,7 +97,6 @@ public class LocalStreamService extends AbstractService implements
   private boolean processLastFile = false;
   private int numberOfFilesProcessed = 0;
   private final Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
-  private static final String TABLE_PREFIX = "conduit_local";
   private Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
   private boolean failedTogetPartitions = false;
 
@@ -245,7 +244,7 @@ public class LocalStreamService extends AbstractService implements
 
   private String getTableName(String streamName) {
     StringBuilder sb = new StringBuilder();
-    sb.append(TABLE_PREFIX);
+    sb.append(LOCAL_TABLE_PREFIX);
     sb.append("_");
     sb.append(streamName);
     return sb.toString();

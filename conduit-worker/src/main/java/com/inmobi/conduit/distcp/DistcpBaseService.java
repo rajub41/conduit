@@ -67,7 +67,6 @@ public abstract class DistcpBaseService extends AbstractService {
   private final int numOfDirPerDistcpPerStream;
   protected final Path jarsPath;
   protected final Path auditUtilJarDestPath;
-  protected static final String TABLE_PREFIX = "conduit";
   
   public DistcpBaseService(ConduitConfig config, String name,
       Cluster srcCluster, Cluster destCluster, Cluster currentCluster,
