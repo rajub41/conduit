@@ -473,8 +473,7 @@ public abstract class AbstractService implements Service, Runnable {
         }
         hcatClient.addPartition(partInfo);
         LOG.info("Added partition successfully : " + partInfo);
-        ConduitMetrics.updateSWGuage(getServiceType(), ADD_PARTITIONS_FAILURES,
-            streamName, 1);
+        ConduitMetrics.updateSWGuage(getServiceType(), ADD_PARTITIONS_FAILURES, streamName, 1);
         return true;
       } catch (HCatException e) {
         if (e.getCause() instanceof AlreadyExistsException) {

@@ -75,7 +75,7 @@ public class DataPurgerService extends AbstractService {
   public DataPurgerService(ConduitConfig conduitConfig, Cluster cluster, HCatClientUtil hcatUtil)
       throws Exception {
     super(DataPurgerService.class.getName(), conduitConfig, 60000 * 60, null,
-        new HashSet<String>(), null);
+        new HashSet<String>(), hcatUtil);
     this.cluster = cluster;
     fs = FileSystem.get(cluster.getHadoopConf());
     this.defaulttrashPathRetentioninHours = new Integer(
@@ -422,6 +422,7 @@ public class DataPurgerService extends AbstractService {
       String yearVal, String monthVal, String dayVal, String hourVal)
           throws HCatException {
     if (!isHCatEnabledStream(streamName)) {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAA hcat not enabled for purgerrrrrrrrrrrrrr");
       return;
     }
     Map<String, String> partSpec = new HashMap<String, String>();
@@ -431,6 +432,7 @@ public class DataPurgerService extends AbstractService {
     partSpec.put("hour", hourVal);
     HCatAddPartitionDesc partDesc = HCatAddPartitionDesc.create(
         Conduit.getHcatDBName(), tableName, hourPath.toString(), partSpec).build();
+    LOG.info("AAAAAAAAAAAAAAAAAAAAA adding partspec to to pathpart map : " + partDesc);
     pathPartitionDescMap.put(hourPath, partDesc);
   }
 
@@ -504,9 +506,11 @@ public class DataPurgerService extends AbstractService {
       while (it.hasNext()) {
         try {
           purgePath = (Path) it.next();
+          LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA  dataaaaaaaaa :  " + pathPartitionDescMap);
           if (pathPartitionDescMap.containsKey(purgePath)) {
             HCatAddPartitionDesc partDesc = pathPartitionDescMap.get(purgePath);
             if (partDesc != null) {
+              LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAA dropping partition : " + partDesc.getDatabaseName() + "     part: " + partDesc);
               hcatClient.dropPartitions(partDesc.getDatabaseName(),
                   partDesc.getTableName(), partDesc.getPartitionSpec(), true);
             }

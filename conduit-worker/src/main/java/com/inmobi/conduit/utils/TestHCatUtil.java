@@ -119,9 +119,9 @@ public class TestHCatUtil {
     LOG.info("AAAAAAAAAAAAAAAAAAAAAA   time : " + cal.getTime() + "    " + cal.get(Calendar.MONTH));
     Map<String, String> firstPtn = new HashMap<String, String>();
     firstPtn.put("year", getStringValue(cal.get(Calendar.YEAR)));
-    firstPtn.put("month", getStringValue(cal.get(Calendar.MONTH) + 1));
+    firstPtn.put("month", "0"+getStringValue(cal.get(Calendar.MONTH) + 1));
     firstPtn.put("day", getStringValue(cal.get(Calendar.DAY_OF_MONTH)));
-    firstPtn.put("hour", getStringValue(cal.get(Calendar.HOUR_OF_DAY)));
+    firstPtn.put("hour", "0"+getStringValue(cal.get(Calendar.HOUR_OF_DAY)));
     firstPtn.put("minute", getStringValue(cal.get(Calendar.MINUTE)));
     LOG.info("AAAAAAAAAAAAAAAAAAAAa partition Map : " + firstPtn);
     return firstPtn;
