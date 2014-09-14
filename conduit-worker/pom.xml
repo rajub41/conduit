@@ -217,6 +217,12 @@
       <groupId>com.inmobi.messaging</groupId>
       <artifactId>messaging-client-core</artifactId>
       <type>jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.thrift</groupId>
+          <artifactId>libthrift</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.inmobi.messaging</groupId>
@@ -226,6 +232,12 @@
       <groupId>com.inmobi.messaging</groupId>
       <artifactId>messaging-client-core</artifactId>
       <type>test-jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.thrift</groupId>
+          <artifactId>libthrift</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.inmobi.conduit</groupId>
@@ -237,6 +249,22 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>15.0-rc1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hive.hcatalog</groupId>
+      <artifactId>hive-webhcat-java-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.thrift</groupId>
+      <artifactId>libthrift</artifactId>
+      <version>0.9.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hive.hcatalog</groupId>
+      <artifactId>hive-hcatalog-core</artifactId>
+      <version>${hive.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
