@@ -2,8 +2,10 @@ package com.inmobi.conduit.distcp;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -40,6 +42,7 @@ import com.inmobi.conduit.TestMiniClusterUtil;
 import com.inmobi.conduit.local.TestLocalPartition;
 import com.inmobi.conduit.local.TestLocalStreamService;
 import com.inmobi.conduit.metrics.ConduitMetrics;
+import com.inmobi.conduit.purge.DataPurgerService;
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.TestHCatUtil;
 import com.inmobi.messaging.publisher.MessagePublisher;
@@ -54,6 +57,11 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
   private static final String DB_NAME = "test_conduit";
   private static final String TABLE_NAME_PREFIX = "conduit";
   private static final String LOCAL_TABLE_NAME_PREFIX = TABLE_NAME_PREFIX + "_local";
+  private static Date lastAddedPartTime;
+
+  public static Date getLastAddedPartTime() {
+    return lastAddedPartTime;
+  }
 
   @BeforeTest
   public void setup() throws Exception{
@@ -67,9 +75,9 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
     prop.setProperty("com.inmobi.conduit.metrics.slidingwindowtime", "100000000");
     ConduitMetrics.init(prop);
     ConduitMetrics.startAll();
-    
-    Conduit.setHCatEnabled(true);
 
+    Conduit.setHCatEnabled(true);
+    
     TestHCatUtil testHCatUtil = new TestHCatUtil();
     HiveConf hcatConf1 = TestHCatUtil.getHcatConf(msPort1, "target/metaStore1", "metadb1");
     HiveConf hcatConf2 = TestHCatUtil.getHcatConf(msPort2, "target/metaStore2", "metadb2");
@@ -150,6 +158,7 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
       service.runPostExecute();
 
     }
+    
 /*
     LOG.info("Running LocalStream Service");
 
@@ -225,17 +234,21 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
 
     int i = 0;
     Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.HOUR_OF_DAY, -1);
+    cal.add(Calendar.HOUR, -1);
+    cal.add(Calendar.MINUTE, -30);
+    lastAddedPartTime = cal.getTime();
     String dateStr = CalendarHelper.getDateTimeAsString(cal);
     Map<String, String> partSpec = TestHCatUtil.getPartitionMap(cal);
     List<HCatFieldSchema> ptnCols = TestHCatUtil.getPartCols();
     Conduit.setHcatDBName(DB_NAME);
+    
     for (String clusterName : clustersToProcess) {
       HCatClientUtil hcatClientUtil = hcatUtilList.get(i++);
       HCatClient hcatClient = TestHCatUtil.getHCatClient(hcatClientUtil);
       TestHCatUtil.createDataBase(DB_NAME, hcatClient);
 
       Cluster cluster = config.getClusters().get(clusterName);
+
       cluster.getHadoopConf().set("mapred.job.tracker",
           super.CreateJobConf().get("mapred.job.tracker"));
       //TestLocalPartition.setHCatClient(DB_NAME, table);
@@ -248,7 +261,7 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
         String tableName = LOCAL_TABLE_NAME_PREFIX + "_" + stream;
         TestHCatUtil.createTable(hcatClient, DB_NAME, tableName, ptnCols);
         Path streamPath = new Path(localrootDir, stream);
-        String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
+        String location = CalendarHelper.getPathFromDate(lastAddedPartTime, streamPath).toString();
         TestLocalPartition.setHCatClient(DB_NAME);
         LOG.info("AAAAAAAAAAAAAAAAAa going to ceate partition with " + DB_NAME + "   " + tableName + "  " + location + "   " + partSpec);
         TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
@@ -333,7 +346,7 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
             }
           }
           Path streamPath = new Path(destRootDir, stream);
-          String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
+          String location = CalendarHelper.getPathFromDate(lastAddedPartTime, streamPath).toString();
           try {
             TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
                 partSpec);
@@ -373,7 +386,7 @@ public class MergeMirrorStreamPartitionsTest extends TestMiniClusterUtil {
             }
           }
           Path streamPath = new Path(destRootDir, stream);
-          String location = CalendarHelper.getPathFromDate(cal.getTime(), streamPath).toString();
+          String location = CalendarHelper.getPathFromDate(lastAddedPartTime, streamPath).toString();
           try {
             TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
                 partSpec);

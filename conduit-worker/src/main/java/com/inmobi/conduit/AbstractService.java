@@ -87,6 +87,8 @@ public abstract class AbstractService implements Service, Runnable {
   public final static String FILES_COPIED_COUNT = "filesCopied.count";
   public final static String DATAPURGER_SERVICE = "DataPurgerService";
   public final static String LAST_FILE_PROCESSED = "lastfile.processed";
+  public final static String ADD_PARTITIONS_FAILURES = "addpartitions.failures";
+  public final static String CONNECTION_FAILURES = "connection.failures";
   protected static final String TABLE_PREFIX = "conduit";
   protected static final String LOCAL_TABLE_PREFIX = TABLE_PREFIX + "_local";
   
@@ -471,6 +473,8 @@ public abstract class AbstractService implements Service, Runnable {
         }
         hcatClient.addPartition(partInfo);
         LOG.info("Added partition successfully : " + partInfo);
+        ConduitMetrics.updateSWGuage(getServiceType(), ADD_PARTITIONS_FAILURES,
+            streamName, 1);
         return true;
       } catch (HCatException e) {
         if (e.getCause() instanceof AlreadyExistsException) {

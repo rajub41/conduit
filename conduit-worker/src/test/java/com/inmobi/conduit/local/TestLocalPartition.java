@@ -1,6 +1,9 @@
 package com.inmobi.conduit.local;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,12 +25,16 @@ import com.inmobi.conduit.ConduitConfigParser;
 import com.inmobi.conduit.FSCheckpointProvider;
 import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.SourceStream;
+import com.inmobi.conduit.distcp.MergeMirrorStreamPartitionsTest;
+import com.inmobi.conduit.utils.CalendarHelper;
+import com.inmobi.conduit.utils.HCatPartitionComparator;
 
 public class TestLocalPartition extends TestLocalStreamService {
 
   private static final Log LOG = LogFactory.getLog(TestLocalPartition.class);
    HCatClient hcatClient = null;
   static String dbName;
+  Cluster srcCluster;
   //static String tableName;
   private Set<String> streamsToProcess = new HashSet<String>();
   public TestLocalPartition(ConduitConfig config, Cluster srcCluster,
@@ -35,6 +42,7 @@ public class TestLocalPartition extends TestLocalStreamService {
       Set<String> streamsToProcess, HCatClientUtil hcatUtil) throws IOException {
     super(config, srcCluster, currentCluster, provider, streamsToProcess, hcatUtil);
     this.streamsToProcess = streamsToProcess;
+    this.srcCluster = srcCluster;
   }
   /*
   @BeforeTest
@@ -57,9 +65,30 @@ public class TestLocalPartition extends TestLocalStreamService {
       for (String stream : streamsToProcess) {
         String tableName = "conduit_local_" + stream;
         List<HCatPartition> list = hcatClient.getPartitions(dbName, tableName);
+        Collections.sort(list, new HCatPartitionComparator());
+        Date lastAddedTime = MergeMirrorStreamPartitionsTest.getLastAddedPartTime();
+        Calendar cal = Calendar.getInstance();
+        /*cal.setTime(lastAddedTime);
+        cal.add(Calendar.HOUR_OF_DAY, 1);
+        cal.add(Calendar.MINUTE, 35);
+      */  Date endTime = cal.getTime();
+       Path localStreamPath = new Path(srcCluster.getLocalFinalDestDirRoot(), stream);
+       Path startPath = CalendarHelper.getPathFromDate(lastAddedTime, localStreamPath);
+       Path endPath = CalendarHelper.getPathFromDate(endTime, localStreamPath);
+       //Path startPath = new Path(localStreamPath);
+       // Date endTime = 
         LOG.info("AAAAAAAAAAAAAAAAAAAA get partitions : " + list.size());
         for (HCatPartition part : list) {
           LOG.info("AAAAaA : " + part.getLocation());
+          
+          Path path = new Path(part.getLocation());
+          if (path.compareTo(startPath) >=0 && path.compareTo(endPath) <= 0) {
+            LOG.info("AAAAAAAAA part location :   " + path);
+            continue;
+          } else {
+            LOG.error("AAA EEEEEEEEEEEEEEEEEEEEErrorrrrrrrrrrrrrrr " + path + "    " + startPath + "    " + endPath);
+          }
+          
         }
       }
     } catch (HCatException e) {

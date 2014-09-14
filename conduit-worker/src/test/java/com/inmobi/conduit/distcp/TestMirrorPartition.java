@@ -1,11 +1,15 @@
 package com.inmobi.conduit.distcp;
 
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.Path;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
@@ -16,6 +20,8 @@ import com.inmobi.conduit.Cluster;
 import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.HCatClientUtil;
+import com.inmobi.conduit.utils.CalendarHelper;
+import com.inmobi.conduit.utils.HCatPartitionComparator;
 
 public class TestMirrorPartition extends TestMirrorStreamService {
 
@@ -55,8 +61,28 @@ public class TestMirrorPartition extends TestMirrorStreamService {
         String tableName = "conduit_" + stream;
         List<HCatPartition> list = hcatClient.getPartitions(dbName, tableName);
         LOG.info("AAAAAAAAAAAAAAAAAAAA get mirror  partitions : " + list.size());
+        Collections.sort(list, new HCatPartitionComparator());
+        Date lastAddedTime = MergeMirrorStreamPartitionsTest.getLastAddedPartTime();
+        Calendar cal = Calendar.getInstance();
+        /*cal.setTime(lastAddedTime);
+        cal.add(Calendar.HOUR_OF_DAY, 1);
+        cal.add(Calendar.MINUTE, 35);
+      */  Date endTime = cal.getTime();
+       Path mergeStreamPath = new Path(destCluster.getFinalDestDirRoot(), stream);
+       Path startPath = CalendarHelper.getPathFromDate(lastAddedTime, mergeStreamPath);
+       Path endPath = CalendarHelper.getPathFromDate(endTime, mergeStreamPath);
+       
         for (HCatPartition part : list) {
           LOG.info("AAAAaA : " + part.getLocation());
+          Path path = new Path(part.getLocation());
+
+          if (path.compareTo(startPath) >=0 && path.compareTo(endPath) <= 0) {
+            LOG.info("AAAAAAAAA part location mirrorrrrrrr :   " + path);
+            continue;
+          } else {
+            LOG.error("AAA EEEEEEEEEEEEEEEEEEEEErrorrrrrrrrrrrrrrr  mirrorrrrrr" + path + "    " + startPath + "    " + endPath);
+          }
+
         }
       }
     } catch (HCatException e) {

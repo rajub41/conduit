@@ -158,6 +158,10 @@ ConfigConstants {
           COMMIT_TIME, eachStream);
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
+      ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
+          ADD_PARTITIONS_FAILURES, eachStream);
+      ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
+          CONNECTION_FAILURES, eachStream);
     }
   }
 
