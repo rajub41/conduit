@@ -115,7 +115,7 @@ public class MirrorStreamService extends DistcpBaseService {
         lastAddedPartitionMap.put(streamName, nextPartitionTime);
       }
     } finally {
-      submitBack(hcatClient);
+      addToPool(hcatClient);
     }
   }
 

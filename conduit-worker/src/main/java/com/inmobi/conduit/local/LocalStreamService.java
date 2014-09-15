@@ -274,7 +274,7 @@ ConfigConstants {
     } catch (Exception e) {
       LOG.warn("Got Exception while publishing partition ", e);
     } finally {
-      submitBack(hcatClient);
+      addToPool(hcatClient);
     }
   }
 
