@@ -87,6 +87,10 @@ public class MergedStreamService extends DistcpBaseService {
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
+          ADD_PARTITIONS_FAILURES, eachStream);
+      ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
+          CONNECTION_FAILURES, eachStream);
+      ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
           JOB_EXECUTION_TIME, eachStream);
     }
     streamHcatEnableMap = new HashMap<String, Boolean>();
