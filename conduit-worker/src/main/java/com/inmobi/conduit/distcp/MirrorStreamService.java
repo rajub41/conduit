@@ -55,8 +55,8 @@ import com.inmobi.conduit.utils.DatePathComparator;
 public class MirrorStreamService extends DistcpBaseService {
   private static final Log LOG = LogFactory.getLog(MirrorStreamService.class);
 
-  public static Map<String, Long> lastAddedPartitionMap;
-  public static Map<String, Boolean> streamHcatEnableMap;
+  private static Map<String, Long> lastAddedPartitionMap = new HashMap<String, Long>();
+  private static Map<String, Boolean> streamHcatEnableMap = new HashMap<String, Boolean>();
   protected static boolean failedTogetPartitions = false;
 
   public MirrorStreamService(ConduitConfig config, Cluster srcCluster,
@@ -98,6 +98,7 @@ public class MirrorStreamService extends DistcpBaseService {
     long nextPartitionTime = fileTimeStamp.getTime() - MILLISECONDS_IN_MINUTE;
     HCatClient hcatClient = getHCatClient();
     if (hcatClient == null) {
+      LOG.info("Didn't get any hcat client from pool hence not adding partitions");
       return;
     }
     try {
@@ -511,7 +512,13 @@ public class MirrorStreamService extends DistcpBaseService {
   @Override
   public void registerPartitions(long commitTime, String categoryName)
       throws InterruptedException {
-    // TODO Auto-generated method stub
+  }
 
+  /*
+   * This method is only for test cases
+   */
+  public void clearHCatInMemoryMaps() {
+    streamHcatEnableMap.clear();
+    lastAddedPartitionMap.clear();
   }
 }
