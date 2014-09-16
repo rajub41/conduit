@@ -128,13 +128,13 @@ public class MergeMirrorStreamPartitionTest extends TestMiniClusterUtil {
     }
     
     LOG.info("Running MirrorStreamService Service");
-    
+    /*
     for (TestMirrorStreamService service : mirrorStreamServices) {
       Thread.currentThread().setName(service.getName());
       service.runPreExecute();
       service.runExecute();
       service.runPostExecute();
-    }
+    }*/
     // clear all the inmemory static map values to avoid failures in other tests
     TestLocalStreamService.clearHCatInMemoryMaps();
     LOG.info("Cleaning up leftovers");
@@ -180,7 +180,7 @@ public class MergeMirrorStreamPartitionTest extends TestMiniClusterUtil {
     // Add a partition with (current -90 mins) timestamp in each table
     // (i.e. local, merge and mirror) for all streams
     Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.HOUR, -1);
+    cal.add(Calendar.HOUR, -2);
     cal.add(Calendar.MINUTE, -30);
     lastAddedPartTime = cal.getTime();
     Map<String, String> partSpec = TestHCatUtil.getPartitionMap(cal);
