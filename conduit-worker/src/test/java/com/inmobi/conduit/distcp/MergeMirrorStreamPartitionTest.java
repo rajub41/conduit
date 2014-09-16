@@ -128,13 +128,13 @@ public class MergeMirrorStreamPartitionTest extends TestMiniClusterUtil {
     }
     
     LOG.info("Running MirrorStreamService Service");
-    /*
+    
     for (TestMirrorStreamService service : mirrorStreamServices) {
       Thread.currentThread().setName(service.getName());
       service.runPreExecute();
       service.runExecute();
       service.runPostExecute();
-    }*/
+    }
     // clear all the inmemory static map values to avoid failures in other tests
     TestLocalStreamService.clearHCatInMemoryMaps();
     LOG.info("Cleaning up leftovers");
@@ -208,8 +208,8 @@ public class MergeMirrorStreamPartitionTest extends TestMiniClusterUtil {
             streamPath).toString();
         LOG.info("add a partition to db: " + DB_NAME + " ,table: " + tableName
             + " ,partition location: " + location + " and partspecs:  " + partSpec);
-        TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
-            partSpec);
+        /*TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
+            partSpec);*/
       }
       localStreamServices.add(service);
       service.prepareLastAddedPartitionMap();
@@ -281,7 +281,7 @@ public class MergeMirrorStreamPartitionTest extends TestMiniClusterUtil {
           Path streamPath = new Path(destRootDir, stream);
           String location = CalendarHelper.getPathFromDate(lastAddedPartTime,
               streamPath).toString();
-          try {
+          /*try {
             TestHCatUtil.addPartition(hcatClient, DB_NAME, tableName, location,
                 partSpec);
           } catch (Exception e) {
@@ -291,7 +291,7 @@ public class MergeMirrorStreamPartitionTest extends TestMiniClusterUtil {
             } else { 
               LOG.warn("Got exception while creating partition " + partSpec, e);
             }
-          }
+          }*/
         }
         remoteMergeService.prepareLastAddedPartitionMap();
         if (currentCluster != null)

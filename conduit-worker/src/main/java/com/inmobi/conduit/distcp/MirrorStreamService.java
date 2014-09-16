@@ -182,6 +182,7 @@ public class MirrorStreamService extends DistcpBaseService {
             ConduitMetrics.updateAbsoluteGauge(getServiceType(),
                 LAST_FILE_PROCESSED, eachStream, lastProcessedFile.get(eachStream));
           }
+          preparePartitionsTOTable(eachStream);
         }
       }
     } catch (Exception e) {
@@ -191,6 +192,7 @@ public class MirrorStreamService extends DistcpBaseService {
       getDestFs().delete(tmpOut, true);
       LOG.debug("Cleanup [" + tmpOut + "]");
       publishAuditMessages(auditMsgList);
+      registerPartitionPerTable();
     }
   }
 
@@ -206,8 +208,13 @@ public class MirrorStreamService extends DistcpBaseService {
       if (entry.getKey().isDir()) {
         retriableMkDirs(getDestFs(), entry.getValue(), streamName);
         if (isStreamHCatEnabled(streamName)) {
+          List<Path> pathsToberegistered = pathsToBeregisteredPerTable.
+              get(getTableName(streamName));
+          if (!pathsToberegistered.contains(entry.getValue())) {
+            pathsToberegistered.add(entry.getValue());
+          }
           LOG.info("Hcat is enabled for " + streamName + " stream");
-          publishPartitions(entry.getValue(), streamName);
+          //publishPartitions(entry.getValue(), streamName);
         }
         ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
             streamName, 1);
@@ -220,7 +227,12 @@ public class MirrorStreamService extends DistcpBaseService {
         retriableMkDirs(getDestFs(), entry.getValue().getParent(), streamName);
         if (isStreamHCatEnabled(streamName)) {
           LOG.info("Hcat is enabled for " + streamName + " stream");
-          publishPartitions(entry.getValue(), streamName);
+          List<Path> pathsToberegistered = pathsToBeregisteredPerTable.
+              get(getTableName(streamName));
+          if (!pathsToberegistered.contains(entry.getValue())) {
+            pathsToberegistered.add(entry.getValue());
+          }
+          //publishPartitions(entry.getValue(), streamName);
         }
         if (retriableRename(getDestFs(), entry.getKey().getPath(),
             entry.getValue(), streamName) == false) {

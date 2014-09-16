@@ -57,11 +57,12 @@ public class TestLocalStreamPartition extends TestLocalStreamService {
         Path localStreamPath = new Path(srcCluster.getLocalFinalDestDirRoot(), stream);
         Path startPath = CalendarHelper.getPathFromDate(lastAddedTime, localStreamPath);
         Path endPath = CalendarHelper.getPathFromDate(endTime, localStreamPath);
+        LOG.info("AAAAAAAAAAAAAAAAAAa startpath " + startPath + "    end path " + endPath);
         LOG.info("Get local partitions from table : " + tableName + ", size:"+list.size());
         for (HCatPartition part : list) {
           LOG.info("Local partition location : " + part.getLocation());          
           Path path = new Path(part.getLocation());
-          Assert.assertTrue(path.compareTo(startPath) >=0 && path.compareTo(endPath) <= 0);          
+          Assert.assertTrue(path.compareTo(startPath) >=0 && path.compareTo(endPath) <= 0);       
         }
       }
     } catch (HCatException e) {

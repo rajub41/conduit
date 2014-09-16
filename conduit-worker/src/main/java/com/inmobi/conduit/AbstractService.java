@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.inmobi.conduit.utils.CalendarHelper;
 import com.inmobi.conduit.utils.HCatPartitionComparator;
@@ -95,13 +96,13 @@ public abstract class AbstractService implements Service, Runnable {
   protected static final long EMPTY_PARTITION_LIST = -1;
   protected static final long FAILED_GET_PARTITIONS = -2;
   protected final static Map<String, Boolean> streamHcatEnableMap =
-      new HashMap<String, Boolean>();
+      new ConcurrentHashMap<String, Boolean>();
   protected final static Map<String, Long> lastAddedPartitionMap =
-      new HashMap<String, Long>();
+      new ConcurrentHashMap<String, Long>();
   protected final static Map<String, List<Path>> pathsToBeregisteredPerTable =
-      new HashMap<String, List<Path>>();
+      new ConcurrentHashMap<String, List<Path>>();
 
-  protected final HCatClientUtil hcatUtil;
+  protected  HCatClientUtil hcatUtil;
 
   protected static String hostname;
   static {
