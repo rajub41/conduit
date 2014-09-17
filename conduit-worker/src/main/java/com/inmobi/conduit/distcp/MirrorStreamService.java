@@ -76,13 +76,13 @@ public class MirrorStreamService extends DistcpBaseService {
       ConduitMetrics.registerAbsoluteGauge(getServiceType(),
           LAST_FILE_PROCESSED, eachStream);
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
-          ADD_PARTITIONS_FAILURES, eachStream);
+          HCAT_ADD_PARTITIONS_COUNT, eachStream);
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
-          CONNECTION_FAILURES, eachStream);
+          HCAT_CONNECTION_FAILURES, eachStream);
+      ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
+          FAILED_TO_GET_HCAT_CLIENT_COUNT, eachStream);
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
           JOB_EXECUTION_TIME, eachStream);
-      streamHcatEnableMap = new HashMap<String, Boolean>();
-      lastAddedPartitionMap = new HashMap<String, Long>();
     }
   }
 
@@ -161,7 +161,7 @@ public class MirrorStreamService extends DistcpBaseService {
       getDestFs().delete(tmpOut, true);
       LOG.debug("Cleanup [" + tmpOut + "]");
       publishAuditMessages(auditMsgList);
-      registerPartitionPerTable();
+      registerPartitions();
     }
   }
 
