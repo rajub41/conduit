@@ -246,6 +246,7 @@ ConfigConstants {
         LOG.info("Commiting mvPaths and ConsumerPaths");
 
         commit(prepareForCommit(commitTime), false,auditMsgList);
+        updatePathsTobeRegisteredWithLatestDir(commitTime);
         checkPoint(checkpointPaths);
         LOG.info("Commiting trashPaths");
         commit(populateTrashCommitPaths(trashSet), true, null);
@@ -269,6 +270,16 @@ ConfigConstants {
         registerPartitions();
       } catch (Exception e) {
         LOG.warn("Got exception while registering partitions. ", e);
+      }
+    }
+  }
+
+  private void updatePathsTobeRegisteredWithLatestDir(long commitTime)
+      throws IOException {
+    for (String eachStream : streamsToProcess) {
+      if (isStreamHCatEnabled(eachStream)) {
+        String path = srcCluster.getFinalDestDir(eachStream, commitTime);
+        pathsToBeregisteredPerTable.get(getTableName(eachStream)).add(new Path(path));
       }
     }
   }
