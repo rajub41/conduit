@@ -186,6 +186,7 @@ public class MirrorStreamService extends DistcpBaseService {
             ConduitMetrics.updateAbsoluteGauge(getServiceType(),
                 LAST_FILE_PROCESSED, eachStream, lastProcessedFile.get(eachStream));
           }
+          preparePartitionsTobeRegistered(eachStream);
         }
       }
     } catch (Exception e) {
@@ -195,6 +196,7 @@ public class MirrorStreamService extends DistcpBaseService {
       getDestFs().delete(tmpOut, true);
       LOG.debug("Cleanup [" + tmpOut + "]");
       publishAuditMessages(auditMsgList);
+      registerPartitionPerTable();
     }
   }
 
@@ -209,10 +211,7 @@ public class MirrorStreamService extends DistcpBaseService {
       String streamName = getTopicNameFromDestnPath(entry.getValue());
       if (entry.getKey().isDir()) {
         retriableMkDirs(getDestFs(), entry.getValue(), streamName);
-        if (isStreamHCatEnabled(streamName)) {
-          LOG.info("Hcat is enabled for " + streamName + " stream");
-          publishPartitions(entry.getValue(), streamName);
-        }
+        addToTobeRegisteredList(entry.getValue(), streamName);
         ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
             streamName, 1);
       } else {
@@ -222,10 +221,7 @@ public class MirrorStreamService extends DistcpBaseService {
           continue;
         }
         retriableMkDirs(getDestFs(), entry.getValue().getParent(), streamName);
-        if (isStreamHCatEnabled(streamName)) {
-          LOG.info("Hcat is enabled for " + streamName + " stream");
-          publishPartitions(entry.getValue(), streamName);
-        }
+        addToTobeRegisteredList(entry.getValue().getParent(), streamName);
         if (retriableRename(getDestFs(), entry.getKey().getPath(),
             entry.getValue(), streamName) == false) {
           LOG.warn("Failed to rename.Aborting transaction COMMIT to avoid "
@@ -244,6 +240,17 @@ public class MirrorStreamService extends DistcpBaseService {
     for (String eachStream : streamsToProcess) {
       ConduitMetrics.updateSWGuage(getServiceType(), COMMIT_TIME,
           eachStream, elapsedTime);
+    }
+  }
+
+  private void addToTobeRegisteredList(Path registerPath ,
+      String streamName) {
+    if (isStreamHCatEnabled(streamName)) {
+      List<Path> pathsToberegistered = pathsToBeregisteredPerTable.
+          get(getTableName(streamName));
+      if (!pathsToberegistered.contains(registerPath)) {
+        pathsToberegistered.add(registerPath);
+      }
     }
   }
 
