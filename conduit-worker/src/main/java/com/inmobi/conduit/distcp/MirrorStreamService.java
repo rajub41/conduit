@@ -34,7 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hive.hcatalog.api.HCatClient;
 
 import com.google.common.collect.Table;
 import com.inmobi.audit.thrift.AuditMessage;
@@ -84,39 +83,6 @@ public class MirrorStreamService extends DistcpBaseService {
           JOB_EXECUTION_TIME, eachStream);
       streamHcatEnableMap = new HashMap<String, Boolean>();
       lastAddedPartitionMap = new HashMap<String, Long>();
-    }
-  }
-
-  private void publishPartitions(Path destPath, String streamName)
-      throws InterruptedException {
-
-    String tableName = getTableName(streamName);
-    long lastAddedTime = lastAddedPartitionMap.get(tableName);
-    Path streamDirPrefix = new Path(destCluster.getFinalDestDirRoot(), streamName);
-    Date fileTimeStamp = CalendarHelper.getDateFromStreamDir(streamDirPrefix, destPath);
-    long nextPartitionTime = fileTimeStamp.getTime() - MILLISECONDS_IN_MINUTE;
-
-    HCatClient hcatClient = getHCatClient();
-    if (hcatClient == null) {
-      LOG.info("Didn't get any hcat client from pool hence not adding partitions");
-      return;
-    }
-    try {
-      if (lastAddedTime >= nextPartitionTime) {
-        return;
-      } else {
-        String missingPartition = Cluster.getDestDir(
-            destCluster.getFinalDestDirRoot(), streamName, nextPartitionTime);
-        try {
-          addPartition(missingPartition, streamName, nextPartitionTime,
-              tableName, hcatClient);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-        lastAddedPartitionMap.put(tableName, nextPartitionTime);
-      }
-    } finally {
-      addToPool(hcatClient);
     }
   }
 
