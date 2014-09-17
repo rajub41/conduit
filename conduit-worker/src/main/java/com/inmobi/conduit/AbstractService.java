@@ -464,7 +464,10 @@ public abstract class AbstractService implements Service, Runnable {
     if (hcatClient == null) {
       LOG.warn("Did not get hcatclient hence not finding the last added partition");
       for (String stream : streamsToProcess) {
-        ConduitMetrics.updateSWGuage(getServiceType(), FAILED_TO_GET_HCAT_CLIENT_COUNT, stream, 1);
+        if (isStreamHCatEnabled(stream)) {
+          updateLastAddedPartitionMap(getTableName(stream), FAILED_GET_PARTITIONS);
+          ConduitMetrics.updateSWGuage(getServiceType(), FAILED_TO_GET_HCAT_CLIENT_COUNT, stream, 1);
+        }
       }
       return;
     }
@@ -482,7 +485,7 @@ public abstract class AbstractService implements Service, Runnable {
             }
             LOG.warn("Got Exception while finding the last added partition for"
                 + " stream " + stream, e);
-            updateLastAddedPartitionMap(stream, FAILED_GET_PARTITIONS);
+            updateLastAddedPartitionMap(getTableName(stream), FAILED_GET_PARTITIONS);
           }
         } else {
           LOG.debug("Hcatalog is not enabled for " + stream + " stream");
