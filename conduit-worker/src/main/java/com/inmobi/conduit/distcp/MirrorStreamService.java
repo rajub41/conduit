@@ -152,7 +152,6 @@ public class MirrorStreamService extends DistcpBaseService {
             ConduitMetrics.updateAbsoluteGauge(getServiceType(),
                 LAST_FILE_PROCESSED, eachStream, lastProcessedFile.get(eachStream));
           }
-          preparePartitionsTobeRegistered(eachStream);
         }
       }
     } catch (Exception e) {
@@ -449,6 +448,7 @@ public class MirrorStreamService extends DistcpBaseService {
   protected String getTier() {
     return "MIRROR";
   }
+
   /*
    * Full path needs to be preserved for mirror stream
    */
