@@ -97,7 +97,7 @@ public class TestCreateListing {
     assert checkpointPaths.size() == 0;
 
     //sleep for 10 msec
-    Thread.sleep(10);
+    Thread.sleep(2000);
     service.createListing(localFs, localFs.getFileStatus(new Path(rootDir,
  "data")), results, trashSet,
         checkpointPaths);
@@ -124,7 +124,7 @@ public class TestCreateListing {
  "data")), results, trashSet,
         checkpointPaths);
     System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa files in result map " + results);
-    System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA path " + results.keySet().iterator().next().getPath());
+    //System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA path " + results.keySet().iterator().next().getPath());
     // only 1 file exist at this point hence won't be picked
     assert results.size() == 0;
     assert trashSet.size() == 0;
