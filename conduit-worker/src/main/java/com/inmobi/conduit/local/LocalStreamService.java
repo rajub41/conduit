@@ -499,7 +499,7 @@ ConfigConstants {
         long latestCollectorFileTimeStamp = -1;
         while (it.hasNext() && numberOfFilesProcessed < filesPerCollector) {
           FileStatus file = it.next();
-          LOG.debug("Processing " + file.getPath());
+          LOG.debug("Processing " + file.getPath() + "     modification time :   " + file.getModificationTime());
           /*
            * fileTimeStamp value will be -1 for the files which are already processed
            */
