@@ -85,7 +85,8 @@ public class TestCreateListing {
     assert checkpointPaths.size() == 0;
 
     //create one data file
-    localFs.create(new Path(collectorPath, "datafile1"));
+    FSDataOutputStream out1 = localFs.create(new Path(collectorPath, "datafile1"));
+    out1.close();
     service.createListing(localFs, localFs.getFileStatus(new Path(rootDir,
     "data")), results, trashSet, checkpointPaths);
 
@@ -121,7 +122,7 @@ public class TestCreateListing {
  "data")), results, trashSet,
         checkpointPaths);
     System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa files in result map " + results);
-    System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA path " + results.keySet().iterator().next().getPath());
+   // System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA path " + results.keySet().iterator().next().getPath());
     // only 1 file exist at this point hence won't be picked
     assert results.size() == 0;
     assert trashSet.size() == 0;
