@@ -115,7 +115,7 @@ public class TestCreateListing {
     service.createListing(localFs, localFs.getFileStatus(new Path(rootDir,
  "data")), results, trashSet,
         checkpointPaths);
-
+    LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa files in result map " + results);
     // only 1 file exist at this point hence won't be picked
     assert results.size() == 0;
     assert trashSet.size() == 0;
