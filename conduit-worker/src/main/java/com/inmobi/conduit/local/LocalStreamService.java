@@ -541,6 +541,7 @@ ConfigConstants {
     String fileName = file.getPath().getName();
     if (fileName != null
         && (!fileName.equalsIgnoreCase(currentFile) || processLastFile)) {
+      LOG.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAa file : " + fileName + "     current file " + currentFile);
       if (!isEmptyFile(file, fs)) {
         Path src = file.getPath().makeQualified(fs);
         String destDir = getCategoryJobOutTmpPath(getCategoryFromSrcPath(src))
