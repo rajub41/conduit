@@ -191,7 +191,10 @@ public class TestCopyMapper {
 
     @Override
     public void progress() {}
-
+    
+    @Override
+    public float getProgress() {return (float)1.0;}
+    
     @Override
     public void setStatus(String status) {}
   }

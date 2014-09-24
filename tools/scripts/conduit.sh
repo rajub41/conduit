@@ -77,6 +77,8 @@ if [ -z $HADOOP_CONF_DIR ]; then
   exit 1
 fi
 
+export CLASSPATH=$CLASSPATH:`exec hadoop classpath`
+echo "CCCCCCCCCCCCCCCCClass pathhhhhhhhhhhh $CLASSPATH"
 #set classpath
 for f in $HADOOP_HOME/hadoop-*.jar;do
   if [[ "$f" != *tool* ]]; then
