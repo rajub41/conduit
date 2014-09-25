@@ -164,7 +164,11 @@ public class MergedStreamService extends DistcpBaseService {
           for (String eachStream : streamsToProcess) {
             if (isStreamHCatEnabled(eachStream)) {
               String path = destCluster.getFinalDestDir(eachStream, commitTime);
-              pathsToBeregisteredPerTable.get(getTableName(eachStream)).add(new Path(path));
+              List<Path> pathsTobeRegistered = pathsToBeregisteredPerTable.
+                  get(getTableName(eachStream));
+              synchronized (pathsTobeRegistered) {
+                pathsTobeRegistered.add(new Path(path));
+              }
             }
           }
         }
@@ -185,7 +189,9 @@ public class MergedStreamService extends DistcpBaseService {
       LOG.debug("Deleting [" + tmpOut + "]");
       publishAuditMessages(auditMsgList);
       try {
-        registerPartitions();
+        synchronized (destCluster) {
+          registerPartitions();
+        }
       } catch (Exception e) {
         LOG.warn("Got exception while registering partitions. ", e);
       }

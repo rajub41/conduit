@@ -356,23 +356,25 @@ public abstract class AbstractService implements Service, Runnable {
           tableName = getTableName(categoryName);
           pathsToBeRegistered = pathsToBeregisteredPerTable.get(tableName);
         }
-        while (isMissingPaths(commitTime, prevRuntime)) {
-          String missingPath = Cluster.getDestDir(destDir, categoryName,
-              prevRuntime);
-          Path missingDir = new Path(missingPath);
-          if (!fs.exists(missingDir)) {
-            LOG.debug("Creating Missing Directory [" + missingDir + "]");
-            fs.mkdirs(missingDir);
-            if (isStreamHCatEnabled(categoryName)) {
-              pathsToBeRegistered.add(missingDir);
+        synchronized (pathsToBeRegistered) {
+          while (isMissingPaths(commitTime, prevRuntime)) {
+            String missingPath = Cluster.getDestDir(destDir, categoryName,
+                prevRuntime);
+            Path missingDir = new Path(missingPath);
+            if (!fs.exists(missingDir)) {
+              LOG.debug("Creating Missing Directory [" + missingDir + "]");
+              fs.mkdirs(missingDir);
+              if (isStreamHCatEnabled(categoryName)) {
+                pathsToBeRegistered.add(missingDir);
+              }
+              ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
+                  categoryName, 1);
             }
-            ConduitMetrics.updateSWGuage(getServiceType(), EMPTYDIR_CREATE,
-                categoryName, 1);
+            prevRuntime += MILLISECONDS_IN_MINUTE;
           }
-          prevRuntime += MILLISECONDS_IN_MINUTE;
-        }
-        if (isStreamHCatEnabled(categoryName)) {
-          pathsToBeregisteredPerTable.put(tableName, pathsToBeRegistered);
+          if (isStreamHCatEnabled(categoryName)) {
+            pathsToBeregisteredPerTable.put(tableName, pathsToBeRegistered);
+          }
         }
       }
     }
@@ -423,28 +425,30 @@ public abstract class AbstractService implements Service, Runnable {
   private void findDiffBetweenLastAddedAndFirstPath(long lastAddedTime,
       String stream, String table) {
     List<Path> listOfPathsTobeRegistered = pathsToBeregisteredPerTable.get(table);
-    if (listOfPathsTobeRegistered.isEmpty()) {
-      return;
-    } else {
-      // get the first path
-      Path firstPathInList = listOfPathsTobeRegistered.get(0);
-      Date timeFromPath = getTimeStampFromHCatPartition(firstPathInList.toString(),
-          stream);
-      LOG.info("Find the missing partitions between "
-          + getLogDateString(lastAddedTime) + " and " + timeFromPath
-          + " for table " + table);
-      while (isMissingPartitions(timeFromPath.getTime(), lastAddedTime)) {
-        long nextPathPartTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
-        Path nextPathTobeAdded = getFinalPath(nextPathPartTime, stream);
-        LOG.info("Add the missing partition location " + nextPathTobeAdded
-            + " to the list for registering");
-        if (nextPathTobeAdded != null) {
-          listOfPathsTobeRegistered.add(nextPathTobeAdded);
-          lastAddedTime = nextPathPartTime;
+    synchronized (listOfPathsTobeRegistered) {
+      if (listOfPathsTobeRegistered.isEmpty()) {
+        return;
+      } else {
+        // get the first path
+        Path firstPathInList = listOfPathsTobeRegistered.get(0);
+        Date timeFromPath = getTimeStampFromHCatPartition(firstPathInList.toString(),
+            stream);
+        LOG.info("Find the missing partitions between "
+            + getLogDateString(lastAddedTime) + " and " + timeFromPath
+            + " for table " + table);
+        while (isMissingPartitions(timeFromPath.getTime(), lastAddedTime)) {
+          long nextPathPartTime = lastAddedTime + MILLISECONDS_IN_MINUTE;
+          Path nextPathTobeAdded = getFinalPath(nextPathPartTime, stream);
+          LOG.info("Add the missing partition location " + nextPathTobeAdded
+              + " to the list for registering");
+          if (nextPathTobeAdded != null) {
+            listOfPathsTobeRegistered.add(nextPathTobeAdded);
+            lastAddedTime = nextPathPartTime;
+          }
         }
+        Collections.sort(listOfPathsTobeRegistered);
+        pathsToBeregisteredPerTable.put(table, listOfPathsTobeRegistered);
       }
-      Collections.sort(listOfPathsTobeRegistered);
-      pathsToBeregisteredPerTable.put(table, listOfPathsTobeRegistered);
     }
   }
 
@@ -580,23 +584,26 @@ public abstract class AbstractService implements Service, Runnable {
           continue;
         }
         List<Path> partitionsTobeRegistered = pathsToBeregisteredPerTable.get(tableName);
-        // Register all the partitions in the list except the last one
-        while (partitionsTobeRegistered.size() > 1) {
-          /* always retrieve first element from the list as we remove the
-           * element once it is added to partition. then second element will
-           *  be the first one
-           */
-          Path path = partitionsTobeRegistered.get(0);
-          Date date = getTimeStampFromHCatPartition(path.toString(), stream);
-          LOG.info("Adding the partition  " + path.toString() + " in " + tableName + " table");
-          if (addPartition(path.toString(), stream, date.getTime(), tableName,
-              hcatClient)) {
-            partitionsTobeRegistered.remove(0);
-            updateLastAddedPartitionMap(tableName, date.getTime());
-          } else {
-            break;
+        synchronized (partitionsTobeRegistered) {
+          // Register all the partitions in the list except the last one
+          while (partitionsTobeRegistered.size() > 1) {
+            /* always retrieve first element from the list as we remove the
+             * element once it is added to partition. then second element will
+             *  be the first one
+             */
+            Path path = partitionsTobeRegistered.get(0);
+            Date date = getTimeStampFromHCatPartition(path.toString(), stream);
+            LOG.info("Adding the partition  " + path.toString() + " in " + tableName + " table");
+            if (addPartition(path.toString(), stream, date.getTime(), tableName,
+                hcatClient)) {
+              partitionsTobeRegistered.remove(0);
+              updateLastAddedPartitionMap(tableName, date.getTime());
+            } else {
+              break;
+            }
           }
         }
+        
       }
     } finally {
       addToPool(hcatClient);

@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -141,7 +142,7 @@ public abstract class DistcpBaseService extends AbstractService {
       if (destStreamMap.containsKey(stream)
           && destStreamMap.get(stream).isHCatEnabled()) {
         updateStreamHCatEnabledMap(stream, true);
-        List<Path> paths = new ArrayList<Path>();
+        List<Path> paths = Collections.synchronizedList(new ArrayList<Path>());
         pathsToBeregisteredPerTable.put(getTableName(stream), paths);
       } else {
         updateStreamHCatEnabledMap(stream, false);
