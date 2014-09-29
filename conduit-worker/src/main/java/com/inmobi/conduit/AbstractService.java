@@ -998,6 +998,8 @@ public abstract class AbstractService implements Service, Runnable {
     for (String stream : streamsToProcess) {
       String tableName = getTableName(stream);
       pathsToBeregisteredPerTable.get(tableName).clear();
+      lastAddedPartitionMap.clear();
+      //streamHcatEnableMap.clear();
     }
   }
 }
