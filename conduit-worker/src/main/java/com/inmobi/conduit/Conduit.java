@@ -370,6 +370,10 @@ public class Conduit implements Service, ConduitConstants {
     }
   }
   
+  public static HiveConf getHiveConf() {
+    HiveConf hcatConf = new HiveConf();
+    return hcatConf;
+  }
   private void createHCatClients() throws Exception {
     try {
       HiveConf hcatConf = new HiveConf();

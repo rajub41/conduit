@@ -42,12 +42,14 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
+import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
 
 import com.google.common.collect.HashBasedTable;
@@ -413,6 +415,14 @@ public abstract class AbstractService implements Service, Runnable {
           return true;
         }
       } catch (HCatException e) {
+        if (e.getCause() instanceof TException) {
+          HiveConf hcatConf = Conduit.getHiveConf();
+          try {
+            hcatClient = HCatClient.create(hcatConf);
+          } catch (HCatException e1) {
+            LOG.warn("AAAAAAAAAAA not able to create hcat client ");
+          }
+        }
         LOG.error("Got exception while trying to get the last added partition ", e);
         return false;
       } finally {
@@ -484,6 +494,14 @@ public abstract class AbstractService implements Service, Runnable {
               LOG.error("Got noSuchObject exception while trying to get table"
                   + " or finding last partition " + e.getMessage());
               throw new RuntimeException(e);
+            }
+            if (e.getCause() instanceof TException) {
+              HiveConf hcatConf = Conduit.getHiveConf();
+              try {
+                hcatClient = HCatClient.create(hcatConf);
+              } catch (HCatException e1) {
+                LOG.warn("AAAAAAAAAAA not able to create hcat client ");
+              }
             }
             LOG.warn("Got Exception while finding the last added partition for"
                 + " stream " + stream, e);
@@ -646,6 +664,14 @@ public abstract class AbstractService implements Service, Runnable {
         LOG.warn("Partition " + partInfo.getLocation() + " is already exists in "
             + tableName + " table. ", e);
         return true;
+      }
+      if (e.getCause() instanceof TException) {
+        HiveConf hcatConf = Conduit.getHiveConf();
+        try {
+          hcatClient = HCatClient.create(hcatConf);
+        } catch (HCatException e1) {
+          LOG.warn("AAAAAAAAAAA not able to create hcat client ");
+        }
       }
       ConduitMetrics.updateSWGuage(getServiceType(), HCAT_CONNECTION_FAILURES,
           getName(), 1);

@@ -32,10 +32,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.common.HCatException;
+import org.apache.thrift.TException;
 
 import com.inmobi.conduit.metrics.ConduitMetrics;
 import com.inmobi.conduit.AbstractService;
@@ -478,11 +480,20 @@ public class DataPurgerService extends AbstractService {
               if (hcatException.getCause() instanceof NoSuchObjectException) {
                 LOG.info("partition " + partDesc.getLocation() + " does not"
                     + " exists in " + partDesc.getTableName() + " table");
-              } else {
+              }
+              else {
                 ConduitMetrics.updateSWGuage(getServiceType(),
                     HCAT_PURGE_PARTITION_FAILURES_COUNT, getName(), 1);
                 ConduitMetrics.updateSWGuage(getServiceType(),
                     HCAT_CONNECTION_FAILURES, getName(), 1);
+                if (hcatException.getCause() instanceof TException) {
+                  HiveConf hcatConf = Conduit.getHiveConf();
+                  try {
+                    hcatClient = HCatClient.create(hcatConf);
+                  } catch (HCatException e1) {
+                    LOG.warn("AAAAAAAAAAA not able to create hcat client ");
+                  }
+                }
                 throw hcatException;
               }
             }
