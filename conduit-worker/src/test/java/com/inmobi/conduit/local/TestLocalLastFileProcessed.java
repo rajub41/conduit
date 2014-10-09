@@ -114,7 +114,7 @@ public class TestLocalLastFileProcessed {
     localFs.mkdirs(new Path(path2));
     LocalStreamService service = new LocalStreamService(parser.getConfig(),
         cluster, null, new FSCheckpointProvider(checkpointDir),
-        cluster.getSourceStreams(), null);
+        cluster.getSourceStreams());
     service.execute();
     Assert.assertEquals(0, ConduitMetrics.<AbsoluteGauge>getMetric(service
         .getServiceType(), AbstractService.LAST_FILE_PROCESSED,
@@ -141,7 +141,7 @@ public class TestLocalLastFileProcessed {
 
     LocalStreamService service = new LocalStreamService(parser.getConfig(),
         cluster, null, new FSCheckpointProvider(checkpointDir),
-        cluster.getSourceStreams(), null);
+        cluster.getSourceStreams());
     service.execute();
     Assert.assertEquals(lastAddedDateStream1, ConduitMetrics.<AbsoluteGauge
         >getMetric(
@@ -220,7 +220,7 @@ public class TestLocalLastFileProcessed {
 
     LocalStreamService service = new LocalStreamService(parser.getConfig(),
         cluster, null, new FSCheckpointProvider(checkpointDir),
-        newStreamToProcess, null);
+        newStreamToProcess);
     service.execute();
     /*
      * Value of metric is minimum(latest file time stamp for each collector).
