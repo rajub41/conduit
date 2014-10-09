@@ -177,6 +177,8 @@ public class TestDistCp {
       job.waitForCompletion(true);
       Assert.assertFalse(cluster.getFileSystem().exists(workDir));
       Assert.assertTrue(cluster.getFileSystem().exists(finalDir));
+      System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "
+          + new Path(job.getConfiguration().get(DistCpConstants.CONF_LABEL_META_FOLDER)));
       Assert.assertFalse(cluster.getFileSystem().exists(
           new Path(job.getConfiguration().get(DistCpConstants.CONF_LABEL_META_FOLDER))));
       verifyResults();
