@@ -35,7 +35,7 @@ public class TestRetriableFsOperations extends AbstractService {
   }
 
   public TestRetriableFsOperations() {
-    super(null, null, -1, null, null, null);
+    super(null, null, -1, null);
   }
 
   public TestRetriableFsOperations(String name, ConduitConfig config,

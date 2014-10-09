@@ -48,6 +48,7 @@ import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.DestinationStream;
 import com.inmobi.conduit.HCatClientUtil;
 
+import com.inmobi.conduit.DestinationStream;
 
 public abstract class DistcpBaseService extends AbstractService {
 

@@ -108,8 +108,6 @@ public abstract class AbstractService implements Service, Runnable {
   protected final static Map<String, Set<Path>> pathsToBeregisteredPerTable =
       new ConcurrentHashMap<String, Set<Path>>();
 
-  protected  HCatClientUtil hcatUtil;
-
   protected static String hostname;
   static {
     try {

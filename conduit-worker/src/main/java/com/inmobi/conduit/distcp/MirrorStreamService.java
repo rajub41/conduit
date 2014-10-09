@@ -57,8 +57,7 @@ public class MirrorStreamService extends DistcpBaseService {
 
   public MirrorStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
-      CheckpointProvider provider, Set<String> streamsToProcess,
-      HCatClientUtil hcatUtil) throws Exception {
+      CheckpointProvider provider, Set<String> streamsToProcess) throws Exception {
     super(config, "MirrorStreamService_" + getServiceName(streamsToProcess),
         srcCluster, destinationCluster, currentCluster, provider,
         streamsToProcess, hcatUtil);

@@ -242,7 +242,7 @@ public class Conduit implements Service, ConduitConstants {
       Cluster cluster = config.getClusters().get(clusterName);
       LOG.info("Starting Purger for Cluster [" + clusterName + "]");
       //Start a purger per cluster
-      services.add(new DataPurgerService(config, cluster, hcatUtil));
+      services.add(new DataPurgerService(config, cluster));
     }
     if (isHCatEnabled) {
       prepareLastAddedPartitions();

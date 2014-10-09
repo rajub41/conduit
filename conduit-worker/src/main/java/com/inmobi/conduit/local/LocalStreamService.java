@@ -33,7 +33,11 @@ import java.util.TreeSet;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.ConfigConstants;
+<<<<<<< HEAD
 import com.inmobi.conduit.HCatClientUtil;
+=======
+
+>>>>>>> Refactor service constructors: remove hcatutil parameter
 import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;
 
