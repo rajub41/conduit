@@ -28,7 +28,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.mapred.MockJobTracker;
 import org.junit.*;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -42,6 +41,7 @@ import com.inmobi.conduit.distcp.tools.DistCpOptions.FileAttribute;
 import com.inmobi.conduit.distcp.tools.mapred.CopyCommitter;
 import com.inmobi.conduit.distcp.tools.mapred.CopyMapper;
 import com.inmobi.conduit.distcp.tools.util.TestDistCpUtils;
+import com.inmobi.conduit.mapred.MockJobTracker;
 
 import java.io.IOException;
 import java.util.Arrays;

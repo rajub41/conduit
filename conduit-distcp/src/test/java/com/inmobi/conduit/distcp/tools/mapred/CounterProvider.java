@@ -20,7 +20,6 @@ package com.inmobi.conduit.distcp.tools.mapred;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.mapred.MockJobTracker;
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Counters;
@@ -30,6 +29,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.junit.Test;
 import org.junit.Assert;
+
+import com.inmobi.conduit.mapred.MockJobTracker;
 
 import java.io.IOException;
 
