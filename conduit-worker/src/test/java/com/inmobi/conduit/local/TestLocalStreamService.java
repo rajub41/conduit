@@ -391,7 +391,7 @@ public class TestLocalStreamService extends LocalStreamService implements
 
   public TestLocalStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster currentCluster, CheckpointProvider provider,
-      Set<String> streamsToProcess, HCatClientUtil hcatUtil)
+      Set<String> streamsToProcess)
           throws IOException {
     super(config, srcCluster, currentCluster, provider, streamsToProcess);
     this.srcCluster = srcCluster;

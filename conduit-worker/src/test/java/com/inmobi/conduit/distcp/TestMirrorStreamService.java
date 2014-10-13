@@ -50,7 +50,7 @@ public class TestMirrorStreamService extends MirrorStreamService
   private Map<String, List<String>> files = null;
   private Calendar behinddate = new GregorianCalendar();
   private long mergeCommitTime = 0;
-  
+
   public TestMirrorStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster destinationCluster, Cluster currentCluster,
       Set<String> streamsToProcess, HCatClientUtil hcatUtil) throws Exception {

@@ -312,7 +312,7 @@
         <artifactId>commons-configuration</artifactId>
         <version>1.9</version>
       </dependency>
-       <dependency>
+      <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>hive-webhcat-java-client</artifactId>
         <version>${hive.version}</version>
@@ -326,6 +326,16 @@
         <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>hive-hcatalog-core</artifactId>
         <version>${hive.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-exec</artifactId>
+        <version>0.13.1-inm</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-metastore</artifactId>
+        <version>0.13.1-inm</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

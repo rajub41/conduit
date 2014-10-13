@@ -67,6 +67,7 @@ public class Conduit implements Service, ConduitConstants {
   private volatile boolean conduitStarted = false;
   private static boolean isHCatEnabled = false;
   private static String hcatDBName = null;
+  private static HiveConf hiveConf = null;
   private HCatClientUtil hcatUtil = null;
 
   public Conduit(ConduitConfig config, Set<String> clustersToProcess,
@@ -250,13 +251,7 @@ public class Conduit implements Service, ConduitConstants {
     return services;
   }
 
-  public static HiveConf connectToMetaStoreServer() {
-    HiveConf hiveConf = new HiveConf();
-    String metastoreUrl = hiveConf.getVar(HiveConf.ConfVars.METASTOREURIS);
-    if (metastoreUrl == null) {
-      throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
-    }
-    LOG.info("hive metastore uri is : " + metastoreUrl);
+  public static HiveConf getHiveConf() {
     return hiveConf;
   }
 
@@ -664,9 +659,20 @@ public class Conduit implements Service, ConduitConstants {
         throw new RuntimeException("HCAT DataBase name is not specified"
             + " in the conduit config file");
       }
+      constructHiveConf();
     } else {
       LOG.info("HCAT is not enabled for the worker ");
     }
+  }
+
+  private static void constructHiveConf() {
+    HiveConf hConf = new HiveConf();
+    String metastoreUrl = hiveConf.getVar(HiveConf.ConfVars.METASTOREURIS);
+    if (metastoreUrl == null) {
+      throw new RuntimeException("metastroe.uri property is not specified in hive-site.xml");
+    }
+    LOG.info("hive metastore uri is : " + metastoreUrl);
+    hiveConf = hConf;
   }
 
   private void startCuratorLeaderManager(
