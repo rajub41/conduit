@@ -428,7 +428,7 @@ public abstract class AbstractService implements Service, Runnable {
     return true;
   }
 
-  private void findDiffBetweenLastAddedAndFirstPath(String stream,
+  protected void findDiffBetweenLastAddedAndFirstPath(String stream,
       String table) {
     Set<Path> listOfPathsTobeRegistered = pathsToBeregisteredPerTable.get(table);
     synchronized (listOfPathsTobeRegistered) {
@@ -663,7 +663,7 @@ public abstract class AbstractService implements Service, Runnable {
       return true;
     } catch (HiveException e) {
       if (e.getCause() instanceof AlreadyExistsException) {
-        LOG.warn("Partition " + partitionTobeAdded.getLocation() + " is already"
+        LOG.warn("Partition " + partSpec + " is already"
             + " exists in " + tableName + " table. ", e);
         return true;
       }
@@ -1021,8 +1021,8 @@ public abstract class AbstractService implements Service, Runnable {
     for (String stream : streamsToProcess) {
       String tableName = getTableName(stream);
       pathsToBeregisteredPerTable.get(tableName).clear();
-      lastAddedPartitionMap.clear();
       //streamHcatEnableMap.clear();
     }
+    lastAddedPartitionMap.clear();
   }
 }
