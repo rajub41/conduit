@@ -33,11 +33,7 @@ import java.util.TreeSet;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConstants;
 import com.inmobi.conduit.ConfigConstants;
-<<<<<<< HEAD
-import com.inmobi.conduit.HCatClientUtil;
-=======
 
->>>>>>> Refactor service constructors: remove hcatutil parameter
 import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;
 
@@ -154,7 +150,7 @@ ConfigConstants {
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
           HCAT_CONNECTION_FAILURES, eachStream);
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
-          FAILED_TO_GET_HCAT_CLIENT_COUNT, eachStream);
+          HCAT_ALREADY_EXISTS_EXCEPTION, eachStream);
       ConduitMetrics.registerSlidingWindowGauge(getServiceType(),
           JOB_EXECUTION_TIME, eachStream);
     }
