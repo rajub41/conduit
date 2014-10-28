@@ -35,28 +35,36 @@ import com.inmobi.messaging.util.AuditUtil;
 public class FileUtil {
   private static final Log LOG = LogFactory.getLog(FileUtil.class);
   private static final int WINDOW_SIZE = 60;
+  private static final byte[] NEW_LINE_CHARACTER_IN_BYTES = "\n".getBytes();
 
   public static void gzip(Path src, Path target, Configuration conf,
       Map<Long, Long> received) throws IOException {
     FileSystem fs = FileSystem.get(conf);
-    FSDataOutputStream out = fs.create(target);
-    GzipCodec gzipCodec = ReflectionUtils.newInstance(
-        GzipCodec.class, conf);
-    Compressor gzipCompressor = CodecPool.getCompressor(gzipCodec);
-    OutputStream compressedOut = gzipCodec.createOutputStream(out,
-        gzipCompressor);
+    FSDataOutputStream out = null;
+    OutputStream compressedOut = null;
+    Compressor gzipCompressor = null;
     FSDataInputStream in = fs.open(src);
     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
     try {
       String line;
+      boolean isEmpty = true;
       while ((line = reader.readLine()) != null) {
+        if (isEmpty) {
+          isEmpty = false;
+          out = fs.create(target);
+          GzipCodec gzipCodec = ReflectionUtils.newInstance(
+              GzipCodec.class, conf);
+          gzipCompressor = CodecPool.getCompressor(gzipCodec);
+          compressedOut = gzipCodec.createOutputStream(out,
+              gzipCompressor);
+        }
         byte[] msg = line.getBytes();
         if (received != null) {
           byte[] decodedMsg = Base64.decodeBase64(msg);
           incrementReceived(decodedMsg, received);
         }
         compressedOut.write(msg);
-        compressedOut.write("\n".getBytes());
+        compressedOut.write(NEW_LINE_CHARACTER_IN_BYTES);
       }
     } catch (Exception e) {
       throw new IOException("Error in compressing ", e);
@@ -64,7 +72,7 @@ public class FileUtil {
       IOUtils.cleanup(LOG, in);
       try {
         if (compressedOut != null) {
-         compressedOut.close();
+          compressedOut.close();
         }
         if (out != null) {
           out.close();
@@ -72,8 +80,11 @@ public class FileUtil {
       } catch (IOException exception) {
         LOG.error("Could not close output-stream. ", exception);
         throw exception;
+      } finally {
+        if (gzipCompressor != null) {
+          CodecPool.returnCompressor(gzipCompressor);
+        }
       }
-      CodecPool.returnCompressor(gzipCompressor);
     }
   }
 
