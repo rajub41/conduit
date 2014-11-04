@@ -34,7 +34,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -117,7 +116,7 @@ public class Conduit implements Service, ConduitConstants {
   protected List<AbstractService> init() throws Exception {
     Cluster currentCluster = null;
     if (isHCatEnabled) {
-      connectToMetaStoreServer();
+     // connectToMetaStoreServer();
     }
 
     if (currentClusterName != null) {
@@ -304,8 +303,7 @@ public class Conduit implements Service, ConduitConstants {
       Cluster cluster, Cluster currentCluster, Set<String> streamsToProcess)
           throws IOException {
     return new LocalStreamService(config, cluster, currentCluster,
-        new FSCheckpointProvider(cluster.getCheckpointDir()), streamsToProcess,
-        hcatUtil);
+        new FSCheckpointProvider(cluster.getCheckpointDir()), streamsToProcess);
   }
 
   protected MergedStreamService getMergedStreamService(ConduitConfig config,
@@ -315,7 +313,7 @@ public class Conduit implements Service, ConduitConstants {
     return new MergedStreamService(config, srcCluster, dstCluster,
         currentCluster,
         new FSCheckpointProvider(dstCluster.getCheckpointDir()),
-        streamsToProcess, hcatUtil);
+        streamsToProcess);
   }
 
   protected MirrorStreamService getMirrorStreamService(ConduitConfig config,
@@ -325,60 +323,8 @@ public class Conduit implements Service, ConduitConstants {
     return new MirrorStreamService(config, srcCluster, dstCluster,
         currentCluster,
         new FSCheckpointProvider(dstCluster.getCheckpointDir()),
-        streamsToProcess, hcatUtil);
+        streamsToProcess);
 
-  }
-
-  public void parseAndCreateHCatClients() throws Exception {
-    if (isHCatEnabled) {
-      try {
-        String hcatCientsRaio = System.getProperty(HCAT_CLIENTS_RATIO, "1/5");
-        String [] ratioSplits = hcatCientsRaio.split("/");
-        int numServices = services.size();
-        boolean isValidRatio = isValidRatio(ratioSplits);
-        if (numServices > 0 && isValidRatio) {
-          numOfHCatClients = (int) Math.ceil(
-              (numServices * Integer.parseInt(ratioSplits[0])) / Integer.parseInt(ratioSplits[1]));
-          if (numOfHCatClients <= 0) {
-            numOfHCatClients = 1;
-          }
-        } else {
-          LOG.info("no services or ratio is invalid."
-              + " Starts with " + numOfHCatClients + " hcatclients");
-        }
-      } catch(Exception e) {
-        LOG.error("Exception occured  while calcluating the number"
-            + " of hcatClients ", e);
-        numOfHCatClients = 10;
-      }
-      createHCatClients();
-    }
-  }
-
-  private boolean isValidRatio(String[] ratioSplits) {
-    if (ratioSplits.length == 2) {
-      int num = Integer.parseInt(ratioSplits[0]);
-      int den = Integer.parseInt(ratioSplits[1]);
-      if (num > den || den < 1) {
-        return false;
-      }
-      return true;
-    } else {
-      return  false;
-    }
-  }
-  
-  private void createHCatClients() throws Exception {
-    try {
-      HiveConf hcatConf = new HiveConf();
-      hcatConf.set("hive.metastore.local", "false");
-      hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, hcatUtil.getMetastoreUrl());
-      LOG.info("Going to create HCAT CLIENTS now ");
-      hcatUtil.createHCatClients(numOfHCatClients, hcatConf);
-    } catch (Exception e) {
-      LOG.error("Got exception while creatig hcat clients ", e);
-      throw e;
-    }
   }
 
   @Override

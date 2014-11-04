@@ -41,7 +41,7 @@ public class TestRetriableFsOperations extends AbstractService {
   public TestRetriableFsOperations(String name, ConduitConfig config,
       long runIntervalInMsec, CheckpointProvider provider,
       Set<String> streamsToProcess) {
-    super(name, config, runIntervalInMsec, provider, streamsToProcess, null);
+    super(name, config, runIntervalInMsec, provider, streamsToProcess);
   }
 
   @BeforeMethod

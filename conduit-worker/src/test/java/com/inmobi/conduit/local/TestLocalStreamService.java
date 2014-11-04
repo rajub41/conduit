@@ -25,7 +25,6 @@ import com.inmobi.conduit.CheckpointProvider;
 import com.inmobi.conduit.Cluster;
 import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConstants;
-import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.PublishMissingPathsTest;
 import com.inmobi.conduit.SourceStream;
 import com.inmobi.conduit.utils.CalendarHelper;

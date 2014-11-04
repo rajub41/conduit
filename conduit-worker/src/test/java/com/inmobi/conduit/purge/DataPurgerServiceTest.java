@@ -17,7 +17,6 @@ import com.inmobi.conduit.AbstractService;
 import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConfigParser;
-import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.local.LocalStreamServiceTest;
 import com.inmobi.conduit.metrics.ConduitMetrics;
 import com.inmobi.conduit.metrics.SlidingTimeWindowGauge;
@@ -155,10 +154,9 @@ public class DataPurgerServiceTest {
   }
 
   private class TestDataPurgerService extends DataPurgerService {
-    public TestDataPurgerService(ConduitConfig config, Cluster cluster,
-        HCatClientUtil hcatUtil)
+    public TestDataPurgerService(ConduitConfig config, Cluster cluster)
         throws Exception {
-      super(config, cluster, hcatUtil);
+      super(config, cluster);
     }
 
     public void runOnce() throws Exception {
@@ -181,7 +179,7 @@ public class DataPurgerServiceTest {
     for (Cluster cluster : config.getClusters().values()) {
 
       LOG.info("Creating Service for Cluster " + cluster.getName());
-      TestDataPurgerService service = new TestDataPurgerService(config, cluster, null);
+      TestDataPurgerService service = new TestDataPurgerService(config, cluster);
 
       service.runOnce();
 
@@ -377,7 +375,7 @@ public class DataPurgerServiceTest {
 
     for (Cluster cluster : config.getClusters().values()) {
       TestDataPurgerService service = new TestDataPurgerService(
-          config, cluster, null);
+          config, cluster);
 
       FileSystem fs = FileSystem.getLocal(new Configuration());
       fs.delete(new Path(cluster.getRootDir()), true);
@@ -489,7 +487,7 @@ public class DataPurgerServiceTest {
       date3.add(Calendar.HOUR, -5);
       createTestPurgefiles(fs, cluster, date3, false);
 
-      TestDataPurgerService service = new TestDataPurgerService(config, cluster, null);
+      TestDataPurgerService service = new TestDataPurgerService(config, cluster);
 
       service.runOnce();
 
@@ -559,7 +557,7 @@ public class DataPurgerServiceTest {
       date3.add(Calendar.HOUR, -1);
       createTestPurgefiles(fs, cluster, date3, false);
 
-      TestDataPurgerService service = new TestDataPurgerService(config, cluster, null);
+      TestDataPurgerService service = new TestDataPurgerService(config, cluster);
 
       service.runOnce();
 
@@ -580,7 +578,7 @@ public class DataPurgerServiceTest {
       ConduitConfig config = LocalStreamServiceTest.buildTestConduitConfig(
           "local", "file:///tmp", "datapurger", "48", "24");
       service = new TestDataPurgerService(config, config.getClusters().get(
-          "cluster1"), null);
+          "cluster1"));
     }
     catch (Exception e) {
       LOG.error("Error in creating DataPurgerService", e);

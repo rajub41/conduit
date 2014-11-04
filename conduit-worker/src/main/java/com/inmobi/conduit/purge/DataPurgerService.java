@@ -33,11 +33,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
-import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
-import org.apache.hive.hcatalog.api.HCatClient;
-import org.apache.hive.hcatalog.common.HCatException;
-
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -53,7 +48,6 @@ import com.inmobi.conduit.Conduit;
 import com.inmobi.conduit.ConduitConfig;
 import com.inmobi.conduit.ConduitConfigParser;
 import com.inmobi.conduit.DestinationStream;
-import com.inmobi.conduit.HCatClientUtil;
 import com.inmobi.conduit.SourceStream;
 
 /*
@@ -83,7 +77,7 @@ public class DataPurgerService extends AbstractService {
 
   public DataPurgerService(ConduitConfig conduitConfig, Cluster cluster) throws Exception {
     super(DataPurgerService.class.getName(), conduitConfig, 60000 * 60, null,
-        new HashSet<String>(), hcatUtil);
+        new HashSet<String>());
     this.cluster = cluster;
     fs = FileSystem.get(cluster.getHadoopConf());
     this.defaulttrashPathRetentioninHours = new Integer(

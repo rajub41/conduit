@@ -101,11 +101,11 @@ ConfigConstants {
 
   public LocalStreamService(ConduitConfig config, Cluster srcCluster,
       Cluster currentCluster, CheckpointProvider provider,
-      Set<String> streamsToProcess, HCatClientUtil hcatUtil)
+      Set<String> streamsToProcess)
           throws IOException {
     super("LocalStreamService_" + srcCluster + "_" +
         getServiceName(streamsToProcess), config, DEFAULT_RUN_INTERVAL,
-        provider, streamsToProcess, hcatUtil);
+        provider, streamsToProcess);
     this.srcCluster = srcCluster;
     if (currentCluster == null)
       this.currentCluster = srcCluster;
