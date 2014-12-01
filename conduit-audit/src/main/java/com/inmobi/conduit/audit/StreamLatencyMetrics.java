@@ -46,6 +46,12 @@ public class StreamLatencyMetrics {
 
 	private List<String> streamList = new ArrayList<String>();
 	private List<String> clusterList = new ArrayList<String>();
+	private StringBuilder localEmailMessage = new StringBuilder();
+	private StringBuilder mergeEmailMessage = new StringBuilder();
+	private Map<String, StringBuilder> mailMessagePerLocalCluster = new HashMap<String, StringBuilder>();
+	private Map<String, StringBuilder> mailMessagePerMergeCluster = new HashMap<String, StringBuilder>();
+	private StringBuilder htmlBody = new StringBuilder();
+
 
 	private Map<String, String> clusterUrlMap = new HashMap<String, String>();
 
@@ -108,7 +114,7 @@ public class StreamLatencyMetrics {
 		 * Displaying results for AuditStatsQuery [fromTime=19-11 08:00, toTime=19-11 09:00, groupBy=GroupBy[TIER, TOPIC], filter=Filter{TOPIC=[beacon_rr_uj1_cpm_render], TIER=[LOCAL]}, timeZone=null, percentiles=95]
 [{"TOPIC":"beacon_rr_uj1_cpm_render","CLUSTER":null,"Received":698899,"HOSTNAME":null,"TIMEINTERVAL":null,"Latencies":{"95.0":3},"TIER":"LOCAL"}]
 		 */
-
+		
 		// query the results
 		// post the results
 		for (String cluster : clusterList) {
@@ -122,7 +128,7 @@ public class StreamLatencyMetrics {
 				LOG.info("AAAAAAAAAAAAAA displaying the results : ");
 				auditQuery.displayResults();
 				LOG.info("AAAAAAAAAAAAA post the latency metrics " + metricValueStr);
-				postLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster));
+				postLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), cluster);
 			} catch (Exception e) {
 				System.out.println("Audit Query execute failed with exception: "
 						+ e.getMessage());
@@ -133,7 +139,7 @@ public class StreamLatencyMetrics {
 	}
 
 	private void postLatencyMetrics(AuditDbQuery auditQuery,
-			String startTimeStr, String url) throws JSONException {
+			String startTimeStr, String url, String cluster) throws JSONException {
 		Set<Tuple> tupleSet = auditQuery.getTupleSet();
 		Map<Tuple, Map<Float, Integer>> percentileTupleMap = auditQuery.getPercentile();
 		JSONObject resultJson = new JSONObject();
@@ -142,34 +148,91 @@ public class StreamLatencyMetrics {
 			if (streamList.contains(tuple.getTopic())) {
 				Map<Float, Integer> percentileMap = percentileTupleMap.get(tuple);
 				Set<Float> percentileStr = auditQuery.getPercentileSet();
+				if (!percentileMap.isEmpty()) {
+					if (tuple.getTier().equalsIgnoreCase("LOCAL")) {
+
+						if (!mailMessagePerLocalCluster.containsKey(cluster)) {
+							mailMessagePerLocalCluster.put(cluster, new StringBuilder(tuple.getTopic()));
+						} else {
+							System.out.println("AAAAAAAAAAAAAA tuplesss " + tuple.toString());
+							mailMessagePerLocalCluster.get(cluster).append("\n           " + tuple.getTopic());
+
+						}
+					}
+					if (tuple.getTier().equalsIgnoreCase("MERGE")) {
+
+						if (!mailMessagePerMergeCluster.containsKey(cluster)) {
+							mailMessagePerMergeCluster.put(cluster, new StringBuilder(tuple.getTopic()));
+						} else {
+
+							System.out.println("AAAAAAAAAAAAAA tuplesss " + tuple.toString());
+							mailMessagePerMergeCluster.get(cluster).append("\n            " + tuple.getTopic());
+
+						}
+					}
+				}
+
 				for (Float percentileVal : percentileStr) {
 					Integer latencyValue = percentileMap.get(percentileVal);
 					// post metrics to the curl url
 					String percentile = String.valueOf(percentileVal).substring(0, String.valueOf(percentileVal).indexOf('.'));
 
 					resultJson.put(tuple.getTier() + " " + percentile + " " + tuple.getTopic() , latencyValue);
+					if (tuple.getTier().equalsIgnoreCase("LOCAL")) {
+						if (!mailMessagePerLocalCluster.containsKey(cluster)) {
+							mailMessagePerLocalCluster.put(cluster, new StringBuilder(tuple.getTopic()));
+						}
+						StringBuilder sb = mailMessagePerLocalCluster.get(cluster);
+						sb.append("   ").append(latencyValue).append(" ");
+					} else if (tuple.getTier().equalsIgnoreCase("MERGE")) {
+						if (!mailMessagePerMergeCluster.containsKey(cluster)) {
+							mailMessagePerMergeCluster.put(cluster, new StringBuilder(tuple.getTopic()));
+						}
+						StringBuilder sb = mailMessagePerMergeCluster.get(cluster);
+						sb.append("   ").append(latencyValue).append("  ");
+						//mergeEmailMessage.append(cluster).append(" "). append(tuple.getTopic()).append("   ").append(latencyValue).append("\n");
+					}
 				}
 			}
 		}
-		try {
-			postLatencies(resultJson, url);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (false) {   // post metrics based on weekly mail or hourly cron
+			try {
+				postLatencies(resultJson, url);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+	}
+
+	private void sendMail() {
+		System.out.println("going to send mail to recipient list");
+		StringBuilder emailMessage = new StringBuilder();
+
+		emailMessage.append("LOCAL \n").append("--------\n").append("Cluster  ").append(" Topic             ").append(" 90      95     \n");
+		for (Map.Entry<String, StringBuilder> localEntry : mailMessagePerLocalCluster.entrySet()) {
+			String cluster = localEntry.getKey();
+			String message = localEntry.getValue().toString();
+			emailMessage.append(cluster).append("       ").append(message).append("\n");
+		}
+		System.out.println("AAAAAAAAAAA email message till local " + emailMessage);
+		emailMessage.append("MERGE \n").append("--------\n").append("Cluster  ").append(" Topic             ").append(" 90      95    \n");
+
+		for (Map.Entry<String, StringBuilder> localEntry : mailMessagePerMergeCluster.entrySet()) {
+			String cluster = localEntry.getKey();
+			String message = localEntry.getValue().toString();
+			emailMessage.append(cluster).append("       ").append(message).append("\n");
+		}
+		List<String> emailIdList = new ArrayList<String>();
+		emailIdList.add("raju.bairishetti@inmobi.com");
+		emailIdList.add("raju.b41@gmail.com");
+		EmailHelper.sendMail(emailMessage.toString(), emailIdList);
 	}
 
 	private void postLatencies(JSONObject resultJson, String url) throws IOException {
 		HttpURLConnection con = null;
 		try {
 			con = (HttpURLConnection) ((new URL(url).openConnection()));
-
-			//con.setRequestMethod("POST");
-
-			//con.setRequestProperty("Content-Type","application/x-www-form-urlencoded"); 
-			//con.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0;Windows98;DigExt)");
-			//scon.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-			//con.setRequestProperty("Content-Length", String.valueOf(resultJson.toString().getBytes().length));
 			con.setDoOutput(true);
 			con.setDoInput(true); 
 			con.setUseCaches(false);
@@ -180,37 +243,15 @@ public class StreamLatencyMetrics {
 			wr.writeBytes("log=" + resultJson.toString());
 			wr.flush();
 			wr.close();
-	 
-			
+
 			LOG.info("AAAAAAAAAAAA reading from the url using input stream ");
 			BufferedReader in = new BufferedReader(
-                    new InputStreamReader(
-                    con.getInputStream()));
-String decodedString;
-while ((decodedString = in.readLine()) != null) {
-LOG.info("AAAAAAAAAAAdecoded : " + decodedString);
-}
-in.close();
-	/*		OutputStream os = null;
-			OutputStreamWriter osw = null;
-			try {
-				os = con.getOutputStream();
-				osw = new OutputStreamWriter(os, "UTF-8");
-				LOG.info("AAAAAAAAAAAA posting this value " + "'" + resultJson.toString() + "'");
-				osw.write(resultJson.toString());
-			} finally {
-				try {
-					if (osw != null) {
-						LOG.info("AAAAAAAAAAAAA closing oswriter " );
-						osw.close();
-					}
-				} finally {
-					if (os != null) {
-						LOG.info("AAAAAAAAAAAAA closing os " );
-						os.close();
-					}
-				}
-			}*/
+					new InputStreamReader(con.getInputStream()));
+			String decodedString;
+			while ((decodedString = in.readLine()) != null) {
+				LOG.info("AAAAAAAAAAAdecoded : " + decodedString);
+			}
+			in.close();
 		} finally {
 			if (con != null) {
 				LOG.info("AAAAAAAAAAAAA disconnecting connection to bedner " );
@@ -244,6 +285,7 @@ in.close();
 		String urlStr = null;
 		int relativeTimeInHours = -1;
 		int relativeTimeInDays = 0;
+		String sendWeeklyMail = "false";
 		if (args.length < 3) {
 			printUsage();
 			System.exit(-1);
@@ -253,31 +295,33 @@ in.close();
 			if (args[i].equalsIgnoreCase("-streams")) {
 				streamStr = args[i+1];
 				i += 2;
-			}
-			if (args[i].equalsIgnoreCase("-clusters")) {
+			} else if (args[i].equalsIgnoreCase("-clusters")) {
 				clusterStr = args[i+1];
 				i += 2;
-			}
-			if (args[i].equalsIgnoreCase("-urls")) {
+			} else if (args[i].equalsIgnoreCase("-urls")) {
 				urlStr = args[i + 1];
 				i += 2;
-			}
-			if (args[i].equalsIgnoreCase("-percentile")) {
+			}else if (args[i].equalsIgnoreCase("-percentile")) {
 				percentileStr = args[i + 1];
 				i += 2;
-			}
-			if (args[i].equalsIgnoreCase("-hours")) {
+			} else if (args[i].equalsIgnoreCase("-hours")) {
 				relativeTimeInHours = Integer.parseInt(args[i+1]);
 				i += 2;
-			}
-			if (args[i].equalsIgnoreCase("-days")) {
+			} else if (args[i].equalsIgnoreCase("-days")) {
 				relativeTimeInDays = Integer.parseInt(args[i+1]);
 				i += 2;
+			} else if (args[i].equalsIgnoreCase("-mail")) {
+				sendWeeklyMail = args[i+1];
+				i += 2;
+			} else {
+				printUsage();
 			}
 		}
 		//TODO Validate parameters
 		StreamLatencyMetrics latencyMetrics = new StreamLatencyMetrics();
 		latencyMetrics.evaluateLatencies(streamStr, clusterStr, urlStr,
 				percentileStr, relativeTimeInDays, relativeTimeInHours);
+		latencyMetrics.sendMail();
+
 	}
 }
