@@ -51,8 +51,8 @@ public class StreamLatencyMetrics {
 	private Map<String, StringBuilder> mailMessagePerLocalCluster = new HashMap<String, StringBuilder>();
 	private Map<String, StringBuilder> mailMessagePerMergeCluster = new HashMap<String, StringBuilder>();
 	private StringBuilder htmlBody = new StringBuilder();
-	private StringBuilder localhtmlBody = new StringBuilder();
-	private StringBuilder mergehtmlBody = new StringBuilder();
+	//private StringBuilder localhtmlBody = new StringBuilder();
+	//private StringBuilder mergehtmlBody = new StringBuilder();
 
 
 
@@ -123,12 +123,12 @@ public class StreamLatencyMetrics {
 		// post the results
 		for (String cluster : clusterList) {
 			ClusterHtml clusterHtml = new ClusterHtml(cluster);
-			if (!ClusterHtml.isStartedProcessing) {
-				htmlBody.append("<table BORDER=2 CELLPADDING=10> \n<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
-				ClusterHtml.isStartedProcessing = true;
-			} else {
-				htmlBody.append("<table BORDER=2 CELLPADDING=10> ").append("\n");
-			}
+			//if (!ClusterHtml.isStartedProcessing) {
+				//htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
+				//ClusterHtml.isStartedProcessing = true;
+			/*} else {
+				htmlBody.append("<p></p>").append("<table BORDER=2 CELLPADDING=10> ").append("\n");
+			}*/
 			LOG.info("AAAAAAAAAAAAAAA prepare the  query ");
 			AuditDbQuery auditQuery = new AuditDbQuery(endTimeStr, startTimeStr,
 					"TIER='LOCAL|MERGE',CLUSTER=" + cluster,
@@ -146,6 +146,7 @@ public class StreamLatencyMetrics {
 				e.printStackTrace();
 				return;
 			}
+			htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
 			htmlBody.append(clusterHtml.getLocalHtmlBody()).append("\n").append(clusterHtml.getMergeHtmlBody());
 			//htmlBody.append(localhtmlBody).append("\n").append(mergehtmlBody);
 			htmlBody.append("</table> ");
@@ -247,7 +248,7 @@ public class StreamLatencyMetrics {
 		/*mergehtmlBody.append("</tr> \n <tr> \n ").append("\n");
 		mergehtmlBody.append("<td>" + value + "</td>").append("\n");*/
 	}
-
+/*
 	private void prepareMergeTableRowData(String value) {
 		mergehtmlBody.append("\n<td>" + value + "</td>").append("\n");
 	}
@@ -270,13 +271,13 @@ public class StreamLatencyMetrics {
 		mergehtmlBody.insert(0,"<tr> <th rowspan=" + mergeRowCount + ">" + "MERGE </th>");
 		mergehtmlBody.append("</tr>").append("\n");
 	}
-
+*/
 	private void sendMail() {
 		System.out.println("going to send mail to recipient list");
 		StringBuilder emailMessage = new StringBuilder();
-		LOG.info("LLLLLLLLLocal html  "  + localhtmlBody);
+		//LOG.info("LLLLLLLLLocal html  "  + localhtmlBody);
 
-		LOG.info("\n \n MMMMMMMMMMM html " + mergehtmlBody);
+		//LOG.info("\n \n MMMMMMMMMMM html " + mergehtmlBody);
 		/*htmlBody.append("<tr><td>LOCALLLLLLLLLLLLLLLLLLLLLL</td><td></td><td></td><td></td></tr>\n");
 		htmlBody.append(localhtmlBody).append("\n").append("<tr><td>MERGEEEEEEEEEEEEEEEEEEEE</td><td></td><td></td><td></td></tr>\n").append(mergehtmlBody);
 htmlBody.append("</table> </html>");*/
@@ -394,7 +395,9 @@ htmlBody.append("</table> </html>");*/
 		StreamLatencyMetrics latencyMetrics = new StreamLatencyMetrics();
 		latencyMetrics.evaluateLatencies(streamStr, clusterStr, urlStr,
 				percentileStr, relativeTimeInDays, relativeTimeInHours);
-		latencyMetrics.sendMail();
+		if (sendWeeklyMail.equalsIgnoreCase("true")) {
+			latencyMetrics.sendMail();
+		}
 
 	}
 }
