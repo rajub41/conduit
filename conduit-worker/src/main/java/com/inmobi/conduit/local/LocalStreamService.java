@@ -250,11 +250,11 @@ ConfigConstants {
         commitTime = srcCluster.getCommitTime();
         LOG.info("Commiting mvPaths and ConsumerPaths");
 
-        commit(prepareForCommit(commitTime), false,auditMsgList);
+        commit(prepareForCommit(commitTime), false,auditMsgList, commitTime);
         updatePathsTobeRegisteredWithLatestDir(commitTime);
         checkPoint(checkpointPaths);
         LOG.info("Commiting trashPaths");
-        commit(populateTrashCommitPaths(trashSet), true, null);
+        commit(populateTrashCommitPaths(trashSet), true, null, commitTime);
         LOG.info("Committed successfully at " + getLogDateString(commitTime));
         for (String eachStream : streamsToProcess) {
           if (lastProcessedFile.get(eachStream) != null) {
@@ -361,11 +361,18 @@ ConfigConstants {
    *  srcPath: hdfsUri/conduit/system/tmp/<localStreamservicename>/jobout/<streamName>/<fileName>
    *  destPath: hdfsUri/conduit/streams_local/<streamName>/yyyy/MM/dd/HH/mm/<fileName>
    */
-  private void commit(Map<Path, Path> commitPaths, boolean isTrashData, List<AuditMessage> auditMsgList)
+  private void commit(Map<Path, Path> commitPaths, boolean isTrashData, List<AuditMessage> auditMsgList, long commitTime)
       throws Exception {
     LOG.info("Committing " + commitPaths.size() + " paths.");
     long startTime = System.currentTimeMillis();
     FileSystem fs = FileSystem.get(srcCluster.getHadoopConf());
+    if (!isTrashData) {
+      for (String streamName : streamsToProcess) {
+        Path finalPath = new Path(srcCluster.getLocalDestDir(streamName, commitTime));
+        retriableMkDirs(fs, finalPath, streamName);
+      }
+    }
+
     Table<String, Long, Long> parsedCounters = parseCountersFile(fs);
     for (Map.Entry<Path, Path> entry : commitPaths.entrySet()) {
       LOG.info("Renaming " + entry.getKey() + " to " + entry.getValue());
