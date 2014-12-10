@@ -1,6 +1,6 @@
 package com.inmobi.conduit.audit;
 
-/*import org.apache.commons.logging.Log;
+import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.mail.Message;
@@ -18,10 +18,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;*/
+import java.util.Properties;
 
 public class EmailHelper {
-  /*private static final Log LOG = LogFactory.getLog(EmailHelper.class);
+  private static final Log LOG = LogFactory.getLog(EmailHelper.class);
 
   public static int sendMail(String mailMessage, List<String> emailIdList) {
 
@@ -67,5 +67,5 @@ public class EmailHelper {
     }
     LOG.info("Email sent");
     return 1;
-  }*/
+  }
 }

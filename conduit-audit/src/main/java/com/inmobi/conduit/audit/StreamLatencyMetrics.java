@@ -79,7 +79,8 @@ public class StreamLatencyMetrics {
 	};
 
 	private void evaluateLatencies(String streamStr, String clusterStr, String urlStr,
-			String percentileStr, int days, int hours) {
+			String percentileStr, int days, int hours,
+			int relativeEndTimeInDays, int relativeEndTimeInHours) {
 		if (percentileStr == null || percentileStr.isEmpty()) {
 			percentileStr = "90,95";
 		}
@@ -105,7 +106,7 @@ public class StreamLatencyMetrics {
 		Calendar cal = getTimeToHour(days, hours);
 		Date startDate = cal.getTime();
 
-		Date endDate = getTimeToHour(0, 0).getTime();
+		Date endDate = getTimeToHour(relativeEndTimeInDays, relativeEndTimeInHours).getTime();
 
 		String startTimeStr = formatter.get().format(startDate);
 		String endTimeStr = formatter.get().format(endDate);
@@ -243,6 +244,35 @@ public class StreamLatencyMetrics {
 		}
 	}
 
+	private void postOnlyLatencyMetrics(AuditDbQuery auditQuery,
+			String startTimeStr, String url, ClusterHtml clusterHtml) throws JSONException {
+		Set<Tuple> tupleSet = auditQuery.getTupleSet();
+		Map<Tuple, Map<Float, Integer>> percentileTupleMap = auditQuery.getPercentile();
+		JSONObject resultJson = new JSONObject();
+		resultJson.put("x", startTimeStr);
+		for (Tuple tuple : tupleSet) {
+			if (streamList.contains(tuple.getTopic())) {
+				Map<Float, Integer> percentileMap = percentileTupleMap.get(tuple);
+				Set<Float> percentileStr = auditQuery.getPercentileSet();				
+				for (Float percentileVal : percentileStr) {
+					Integer latencyValue = percentileMap.get(percentileVal);
+					// post metrics to the curl url
+					String percentile = String.valueOf(percentileVal).substring(0,
+							String.valueOf(percentileVal).indexOf('.'));
+
+					resultJson.put(tuple.getTier() + " " + percentile + " " + tuple.getTopic() , latencyValue);
+				}
+			}
+		}
+		LOG.info("Posting the resultJson : " + resultJson + " on url " + url);
+		try {
+			postLatencies(resultJson, url);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	private void updateMergeHtmlBodyWithRows(String value) {
 		
 		/*mergehtmlBody.append("</tr> \n <tr> \n ").append("\n");
@@ -357,8 +387,10 @@ htmlBody.append("</table> </html>");*/
 		String clusterStr = null;
 		String percentileStr = null;
 		String urlStr = null;
-		int relativeTimeInHours = -1;
-		int relativeTimeInDays = 0;
+		int relativeStartTimeInHours = 6;
+		int relativeStartTimeInDays = 0;
+		int relativeEndTimeInHours = 5;
+		int relativeEndTimeInDays = 0;
 		String sendWeeklyMail = "false";
 		if (args.length < 3) {
 			printUsage();
@@ -379,13 +411,19 @@ htmlBody.append("</table> </html>");*/
 				percentileStr = args[i + 1];
 				i += 2;
 			} else if (args[i].equalsIgnoreCase("-hours")) {
-				relativeTimeInHours = Integer.parseInt(args[i+1]);
+				relativeStartTimeInHours = Integer.parseInt(args[i+1]);
 				i += 2;
 			} else if (args[i].equalsIgnoreCase("-days")) {
-				relativeTimeInDays = Integer.parseInt(args[i+1]);
+				relativeStartTimeInDays = Integer.parseInt(args[i+1]);
 				i += 2;
 			} else if (args[i].equalsIgnoreCase("-mail")) {
 				sendWeeklyMail = args[i+1];
+				i += 2;
+			} else if (args[i].equalsIgnoreCase("-endTimeInHours")) {
+				relativeEndTimeInHours = Integer.parseInt(args[i+1]);
+				i += 2;
+			} else if (args[i].equalsIgnoreCase("-endTimeInDays")) {
+				relativeEndTimeInDays = Integer.parseInt(args[i+1]);
 				i += 2;
 			} else {
 				printUsage();
@@ -394,7 +432,8 @@ htmlBody.append("</table> </html>");*/
 		//TODO Validate parameters
 		StreamLatencyMetrics latencyMetrics = new StreamLatencyMetrics();
 		latencyMetrics.evaluateLatencies(streamStr, clusterStr, urlStr,
-				percentileStr, relativeTimeInDays, relativeTimeInHours);
+				percentileStr, relativeStartTimeInDays, relativeStartTimeInHours,
+				relativeEndTimeInDays, relativeEndTimeInHours);
 		if (sendWeeklyMail.equalsIgnoreCase("true")) {
 			latencyMetrics.sendMail();
 		}
