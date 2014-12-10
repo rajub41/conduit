@@ -46,15 +46,9 @@ public class StreamLatencyMetrics {
 
 	private List<String> streamList = new ArrayList<String>();
 	private List<String> clusterList = new ArrayList<String>();
-	private StringBuilder localEmailMessage = new StringBuilder();
-	private StringBuilder mergeEmailMessage = new StringBuilder();
 	private Map<String, StringBuilder> mailMessagePerLocalCluster = new HashMap<String, StringBuilder>();
 	private Map<String, StringBuilder> mailMessagePerMergeCluster = new HashMap<String, StringBuilder>();
 	private StringBuilder htmlBody = new StringBuilder();
-	//private StringBuilder localhtmlBody = new StringBuilder();
-	//private StringBuilder mergehtmlBody = new StringBuilder();
-
-
 
 	private Map<String, String> clusterUrlMap = new HashMap<String, String>();
 
@@ -118,18 +112,13 @@ public class StreamLatencyMetrics {
 		 * Displaying results for AuditStatsQuery [fromTime=19-11 08:00, toTime=19-11 09:00, groupBy=GroupBy[TIER, TOPIC], filter=Filter{TOPIC=[beacon_rr_uj1_cpm_render], TIER=[LOCAL]}, timeZone=null, percentiles=95]
 [{"TOPIC":"beacon_rr_uj1_cpm_render","CLUSTER":null,"Received":698899,"HOSTNAME":null,"TIMEINTERVAL":null,"Latencies":{"95.0":3},"TIER":"LOCAL"}]
 		 */
-		htmlBody.append("<html> \n<head> <style>table, th, td {border: 2px solid black;}</style> \n <title> Local, Merge stream Delays </title>\n</head>  \n");
+		htmlBody.append("<html> \n<head> <style>table, th, td {border: 2px solid black;}"
+				+ "</style> \n <title> Local, Merge stream Delays </title>\n</head>  \n");
 
 		// query the results
 		// post the results
 		for (String cluster : clusterList) {
 			ClusterHtml clusterHtml = new ClusterHtml(cluster);
-			//if (!ClusterHtml.isStartedProcessing) {
-			//htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
-			//ClusterHtml.isStartedProcessing = true;
-			/*} else {
-				htmlBody.append("<p></p>").append("<table BORDER=2 CELLPADDING=10> ").append("\n");
-			}*/
 			LOG.info("AAAAAAAAAAAAAAA prepare the  query ");
 			AuditDbQuery auditQuery = new AuditDbQuery(endTimeStr, startTimeStr,
 					"TIER='LOCAL|MERGE',CLUSTER=" + cluster,
@@ -165,10 +154,7 @@ public class StreamLatencyMetrics {
 			if (sendMail) {
 				htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
 				htmlBody.append(clusterHtml.getLocalHtmlBody()).append("\n").append(clusterHtml.getMergeHtmlBody());
-				//htmlBody.append(localhtmlBody).append("\n").append(mergehtmlBody);
 				htmlBody.append("</table> ");
-				//localhtmlBody.delete(0, localhtmlBody.length()-1);
-				//mergehtmlBody.delete(0, mergehtmlBody.length()-1);
 			}
 		}
 		if (sendMail) {
@@ -259,63 +245,11 @@ public class StreamLatencyMetrics {
 		}
 	}
 
-	private void updateMergeHtmlBodyWithRows(String value) {
-
-		/*mergehtmlBody.append("</tr> \n <tr> \n ").append("\n");
-		mergehtmlBody.append("<td>" + value + "</td>").append("\n");*/
-	}
-	/*
-	private void prepareMergeTableRowData(String value) {
-		mergehtmlBody.append("\n<td>" + value + "</td>").append("\n");
-	}
-
-	private void updateLocalHtmlBodyWithRows(String value) {
-		localhtmlBody.append("</tr> \n <tr> \n ").append("\n");
-		localhtmlBody.append("<td>" + value + "</td>").append("\n");
-	}
-
-	private void prepareLocalTableRowData(String value) {
-		localhtmlBody.append(" <td>" + value + "</td>").append("\n");
-	}
-
-	private void updateLocalMergeHtmlWithRowSpan(String cluster,
-			int localRowCount, int mergeRowCount) {
-		int total = localRowCount + mergeRowCount;
-		localhtmlBody.insert(0," <th rowspan=" + localRowCount + ">" + "LOCAL </th>");
-		localhtmlBody.insert(0,"<tr> <th rowspan=" + total + ">" +  cluster +" </th>");
-		localhtmlBody.append("</tr>").append("\n");
-		mergehtmlBody.insert(0,"<tr> <th rowspan=" + mergeRowCount + ">" + "MERGE </th>");
-		mergehtmlBody.append("</tr>").append("\n");
-	}
-	 */
 	private void sendMail() {
 		System.out.println("going to send mail to recipient list");
-		StringBuilder emailMessage = new StringBuilder();
-		//LOG.info("LLLLLLLLLocal html  "  + localhtmlBody);
-
-		//LOG.info("\n \n MMMMMMMMMMM html " + mergehtmlBody);
-		/*htmlBody.append("<tr><td>LOCALLLLLLLLLLLLLLLLLLLLLL</td><td></td><td></td><td></td></tr>\n");
-		htmlBody.append(localhtmlBody).append("\n").append("<tr><td>MERGEEEEEEEEEEEEEEEEEEEE</td><td></td><td></td><td></td></tr>\n").append(mergehtmlBody);
-htmlBody.append("</table> </html>");*/
-		LOG.info("AAAAAAAA html body   ::: " + htmlBody.toString());
-		emailMessage.append("LOCAL \n").append("--------\n").append("Cluster  ").append(" Topic             ").append(" 90      95     \n");
-		for (Map.Entry<String, StringBuilder> localEntry : mailMessagePerLocalCluster.entrySet()) {
-			String cluster = localEntry.getKey();
-			String message = localEntry.getValue().toString();
-			emailMessage.append(cluster).append("       ").append(message).append("\n");
-		}
-		System.out.println("AAAAAAAAAAA email message till local " + emailMessage);
-		emailMessage.append("MERGE \n").append("--------\n").append("Cluster  ").append(" Topic             ").append(" 90      95    \n");
-
-		for (Map.Entry<String, StringBuilder> localEntry : mailMessagePerMergeCluster.entrySet()) {
-			String cluster = localEntry.getKey();
-			String message = localEntry.getValue().toString();
-			emailMessage.append(cluster).append("       ").append(message).append("\n");
-		}
 		List<String> emailIdList = new ArrayList<String>();
 		emailIdList.add("raju.bairishetti@inmobi.com");
 		emailIdList.add("raju.b41@gmail.com");
-		//EmailHelper.sendMail(emailMessage.toString(), emailIdList);
 		EmailHelper.sendMail(htmlBody.toString(), emailIdList);
 	}
 
