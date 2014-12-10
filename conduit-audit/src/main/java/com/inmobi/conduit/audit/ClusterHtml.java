@@ -38,7 +38,7 @@ public class ClusterHtml {
 	public void setMergeHtmlBody(StringBuilder mergeHtmlBody) {
 		this.mergeHtmlBody = mergeHtmlBody;
 	}
-	
+
 	void updateLocalMergeHtmlWithRowSpan(String cluster,
 			int localRowCount, int mergeRowCount) {
 		int total = localRowCount + mergeRowCount;
@@ -51,12 +51,12 @@ public class ClusterHtml {
 
 	void updateMergeHtmlBodyWithRows(String value) {
 		mergeHtmlBody.append("</tr> \n <tr> \n ").append("\n");
-		mergeHtmlBody.append("<td>" + value + "</td>").append("\n");
+		prepareMergeTableRowData(value);
 	}
 
 	void updateLocalHtmlBodyWithRows(String value) {
 		localHtmlBody.append("</tr> \n <tr> \n ").append("\n");
-		localHtmlBody.append("<td>" + value + "</td>").append("\n");
+		prepareLocalTableRowData(value);
 	}
 
 	void prepareMergeTableRowData(String value) {
@@ -66,5 +66,4 @@ public class ClusterHtml {
 	void prepareLocalTableRowData(String value) {
 		localHtmlBody.append(" <td>" + value + "</td>").append("\n");
 	}
-	
 }

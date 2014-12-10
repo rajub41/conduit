@@ -80,7 +80,7 @@ public class StreamLatencyMetrics {
 
 	private void evaluateLatencies(String streamStr, String clusterStr, String urlStr,
 			String percentileStr, int days, int hours,
-			int relativeEndTimeInDays, int relativeEndTimeInHours) {
+			int relativeEndTimeInDays, int relativeEndTimeInHours, boolean sendMail) {
 		if (percentileStr == null || percentileStr.isEmpty()) {
 			percentileStr = "90,95";
 		}
@@ -125,8 +125,8 @@ public class StreamLatencyMetrics {
 		for (String cluster : clusterList) {
 			ClusterHtml clusterHtml = new ClusterHtml(cluster);
 			//if (!ClusterHtml.isStartedProcessing) {
-				//htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
-				//ClusterHtml.isStartedProcessing = true;
+			//htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
+			//ClusterHtml.isStartedProcessing = true;
 			/*} else {
 				htmlBody.append("<p></p>").append("<table BORDER=2 CELLPADDING=10> ").append("\n");
 			}*/
@@ -147,14 +147,33 @@ public class StreamLatencyMetrics {
 				e.printStackTrace();
 				return;
 			}
-			htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
-			htmlBody.append(clusterHtml.getLocalHtmlBody()).append("\n").append(clusterHtml.getMergeHtmlBody());
-			//htmlBody.append(localhtmlBody).append("\n").append(mergehtmlBody);
-			htmlBody.append("</table> ");
-			//localhtmlBody.delete(0, localhtmlBody.length()-1);
-			//mergehtmlBody.delete(0, mergehtmlBody.length()-1);
+			if (sendMail) {
+				try {
+					postLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else {
+				try {
+					postOnlyLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if (sendMail) {
+				htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
+				htmlBody.append(clusterHtml.getLocalHtmlBody()).append("\n").append(clusterHtml.getMergeHtmlBody());
+				//htmlBody.append(localhtmlBody).append("\n").append(mergehtmlBody);
+				htmlBody.append("</table> ");
+				//localhtmlBody.delete(0, localhtmlBody.length()-1);
+				//mergehtmlBody.delete(0, mergehtmlBody.length()-1);
+			}
 		}
-		htmlBody.append("</html>");
+		if (sendMail) {
+			htmlBody.append("</html>");
+		}
 	}
 
 	private void postLatencyMetrics(AuditDbQuery auditQuery,
@@ -162,8 +181,6 @@ public class StreamLatencyMetrics {
 		Set<Tuple> tupleSet = auditQuery.getTupleSet();
 		Map<Tuple, Map<Float, Integer>> percentileTupleMap = auditQuery.getPercentile();
 		String cluster = clusterHtml.getCluster();
-		JSONObject resultJson = new JSONObject();
-		resultJson.put("x", startTimeStr);
 		int localRowCount = 0;
 		int mergeRowCount = 0;
 		for (Tuple tuple : tupleSet) {
@@ -171,77 +188,46 @@ public class StreamLatencyMetrics {
 				Map<Float, Integer> percentileMap = percentileTupleMap.get(tuple);
 				Set<Float> percentileStr = auditQuery.getPercentileSet();
 				if (tuple.getTier().equalsIgnoreCase("LOCAL")) {
-
 					if (!mailMessagePerLocalCluster.containsKey(cluster)) {
-						//	localhtmlBody.append("<tr>").append("\n");
-                        clusterHtml.prepareLocalTableRowData(tuple.getTopic());
-
+						clusterHtml.prepareLocalTableRowData(tuple.getTopic());
 						mailMessagePerLocalCluster.put(cluster, new StringBuilder(tuple.getTopic()));
 					} else {
 						System.out.println("AAAAAAAAAAAAAA tuplesss " + tuple.toString());
 						clusterHtml.updateLocalHtmlBodyWithRows(tuple.getTopic());
-
 						mailMessagePerLocalCluster.get(cluster).append("\n           " + tuple.getTopic());
-
 					}
 					localRowCount++;
-
 				}
 				if (tuple.getTier().equalsIgnoreCase("MERGE")) {
-
 					if (!mailMessagePerMergeCluster.containsKey(cluster)) {
-						//mergehtmlBody.append("<tr>").append("\n");
 						clusterHtml.prepareMergeTableRowData(tuple.getTopic());
-
 						mailMessagePerMergeCluster.put(cluster, new StringBuilder(tuple.getTopic()));
 					} else {
-
 						System.out.println("AAAAAAAAAAAAAA tuplesss " + tuple.toString());
 						clusterHtml.updateMergeHtmlBodyWithRows(tuple.getTopic());
 						mailMessagePerMergeCluster.get(cluster).append("\n            " + tuple.getTopic());
 					}
 					mergeRowCount++;
 				}
-
-
 				for (Float percentileVal : percentileStr) {
 					Integer latencyValue = percentileMap.get(percentileVal);
-					// post metrics to the curl url
-					String percentile = String.valueOf(percentileVal).substring(0, String.valueOf(percentileVal).indexOf('.'));
 
-					resultJson.put(tuple.getTier() + " " + percentile + " " + tuple.getTopic() , latencyValue);
 					if (tuple.getTier().equalsIgnoreCase("LOCAL")) {
 						if (!mailMessagePerLocalCluster.containsKey(cluster)) {
 							mailMessagePerLocalCluster.put(cluster, new StringBuilder(tuple.getTopic()));
 						}
-						StringBuilder sb = mailMessagePerLocalCluster.get(cluster);
 
-						sb.append("   ").append(latencyValue).append(" ");
 						clusterHtml.prepareLocalTableRowData(String.valueOf(latencyValue));
-						//localhtmlBody.append("<td>" + latencyValue + "</td>").append("\n");
 					} else if (tuple.getTier().equalsIgnoreCase("MERGE")) {
 						if (!mailMessagePerMergeCluster.containsKey(cluster)) {
 							mailMessagePerMergeCluster.put(cluster, new StringBuilder(tuple.getTopic()));
 						}
-						StringBuilder sb = mailMessagePerMergeCluster.get(cluster);
 						clusterHtml.prepareMergeTableRowData(String.valueOf(latencyValue));
-						//mergehtmlBody.append("<td>" + latencyValue + "</td>").append("\n");
-						sb.append("   ").append(latencyValue).append("  ");
-						//mergeEmailMessage.append(cluster).append(" "). append(tuple.getTopic()).append("   ").append(latencyValue).append("\n");
 					}
 				}
 			}
 		}
 		clusterHtml.updateLocalMergeHtmlWithRowSpan(cluster, localRowCount, mergeRowCount);
-
-		if (false) {   // post metrics based on weekly mail or hourly cron
-			try {
-				postLatencies(resultJson, url);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 	}
 
 	private void postOnlyLatencyMetrics(AuditDbQuery auditQuery,
@@ -274,11 +260,11 @@ public class StreamLatencyMetrics {
 	}
 
 	private void updateMergeHtmlBodyWithRows(String value) {
-		
+
 		/*mergehtmlBody.append("</tr> \n <tr> \n ").append("\n");
 		mergehtmlBody.append("<td>" + value + "</td>").append("\n");*/
 	}
-/*
+	/*
 	private void prepareMergeTableRowData(String value) {
 		mergehtmlBody.append("\n<td>" + value + "</td>").append("\n");
 	}
@@ -301,7 +287,7 @@ public class StreamLatencyMetrics {
 		mergehtmlBody.insert(0,"<tr> <th rowspan=" + mergeRowCount + ">" + "MERGE </th>");
 		mergehtmlBody.append("</tr>").append("\n");
 	}
-*/
+	 */
 	private void sendMail() {
 		System.out.println("going to send mail to recipient list");
 		StringBuilder emailMessage = new StringBuilder();
@@ -391,7 +377,7 @@ htmlBody.append("</table> </html>");*/
 		int relativeStartTimeInDays = 0;
 		int relativeEndTimeInHours = 5;
 		int relativeEndTimeInDays = 0;
-		String sendWeeklyMail = "false";
+		Boolean sendWeeklyMail = false;
 		if (args.length < 3) {
 			printUsage();
 			System.exit(-1);
@@ -416,14 +402,14 @@ htmlBody.append("</table> </html>");*/
 			} else if (args[i].equalsIgnoreCase("-days")) {
 				relativeStartTimeInDays = Integer.parseInt(args[i+1]);
 				i += 2;
-			} else if (args[i].equalsIgnoreCase("-mail")) {
-				sendWeeklyMail = args[i+1];
-				i += 2;
 			} else if (args[i].equalsIgnoreCase("-endTimeInHours")) {
 				relativeEndTimeInHours = Integer.parseInt(args[i+1]);
 				i += 2;
 			} else if (args[i].equalsIgnoreCase("-endTimeInDays")) {
 				relativeEndTimeInDays = Integer.parseInt(args[i+1]);
+				i += 2;
+			} else if (args[i].equalsIgnoreCase("-sendMail")) {
+				sendWeeklyMail = Boolean.parseBoolean(args[i+1]);
 				i += 2;
 			} else {
 				printUsage();
@@ -433,8 +419,8 @@ htmlBody.append("</table> </html>");*/
 		StreamLatencyMetrics latencyMetrics = new StreamLatencyMetrics();
 		latencyMetrics.evaluateLatencies(streamStr, clusterStr, urlStr,
 				percentileStr, relativeStartTimeInDays, relativeStartTimeInHours,
-				relativeEndTimeInDays, relativeEndTimeInHours);
-		if (sendWeeklyMail.equalsIgnoreCase("true")) {
+				relativeEndTimeInDays, relativeEndTimeInHours, sendWeeklyMail);
+		if (sendWeeklyMail) {
 			latencyMetrics.sendMail();
 		}
 
