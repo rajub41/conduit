@@ -50,20 +50,20 @@ public class ClusterHtml {
 	}
 
 	void updateMergeHtmlBodyWithRows(String value) {
-		mergeHtmlBody.append("</tr> \n <tr> \n ").append("\n");
+		mergeHtmlBody.append("</tr> \n <tr>").append("\n");
 		prepareMergeTableRowData(value);
 	}
 
 	void updateLocalHtmlBodyWithRows(String value) {
-		localHtmlBody.append("</tr> \n <tr> \n ").append("\n");
+		localHtmlBody.append("</tr> \n <tr>").append("\n");
 		prepareLocalTableRowData(value);
 	}
 
 	void prepareMergeTableRowData(String value) {
-		mergeHtmlBody.append("\n<td>" + value + "</td>").append("\n");
+		mergeHtmlBody.append("<td>" + value + "</td>").append("\n");
 	}
 
 	void prepareLocalTableRowData(String value) {
-		localHtmlBody.append(" <td>" + value + "</td>").append("\n");
+		localHtmlBody.append("<td>" + value + "</td>").append("\n");
 	}
 }

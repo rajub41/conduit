@@ -129,7 +129,7 @@ public class StreamLatencyMetrics {
 				LOG.info("AAAAAAAAAAAAAA displaying the results : ");
 				auditQuery.displayResults();
 				LOG.info("AAAAAAAAAAAAA post the latency metrics " + metricValueStr);
-				postLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
+				//postLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
 			} catch (Exception e) {
 				System.out.println("Audit Query execute failed with exception: "
 						+ e.getMessage());
@@ -213,6 +213,7 @@ public class StreamLatencyMetrics {
 				}
 			}
 		}
+		LOG.info("AAAAAAAAAAAAAAAAAA cluster   " + cluster + "   lcoal " + localRowCount + "   merge " + mergeRowCount);
 		clusterHtml.updateLocalMergeHtmlWithRowSpan(cluster, localRowCount, mergeRowCount);
 	}
 
