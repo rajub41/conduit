@@ -76,9 +76,9 @@ public class StreamLatencyMetrics {
 			String percentileStr, int days, int hours,
 			int relativeEndTimeInDays, int relativeEndTimeInHours, boolean sendMail) {
 		if (percentileStr == null || percentileStr.isEmpty()) {
-			percentileStr = "90,95";
+			percentileStr = "95,99";
 		}
-		LOG.info("AAAAAAAAAA percentile str " + percentileStr);
+		LOG.info(" percentile str " + percentileStr);
 
 		String [] streamSplits = streamStr.split(",");
 		String [] clusterSplits = clusterStr.split(",");
@@ -87,15 +87,15 @@ public class StreamLatencyMetrics {
 		for (int i = 0; i < clusterSplits.length; i++) {	
 			clusterUrlMap.put(clusterSplits[i], urlSplits[i]);
 		}
-		LOG.info("AAAAAA clusterUrl map " + clusterUrlMap);
+		LOG.info(" clusterUrl map " + clusterUrlMap);
 		for (String stream : streamSplits) {
 			streamList.add(stream);
 		}
-		LOG.info("AAAAAAAAAAAAA streams list " + streamList);
+		LOG.info(" streams list " + streamList);
 		for (String cluster : clusterSplits) {
 			clusterList.add(cluster);
 		}
-		LOG.info("AAAAAAAAAAAAA clusters list " + clusterList);
+		LOG.info(" clusters list " + clusterList);
 
 		Calendar cal = getTimeToHour(days, hours);
 		Date startDate = cal.getTime();
@@ -115,44 +115,38 @@ public class StreamLatencyMetrics {
 		htmlBody.append("<html> \n<head> <style>table, th, td {border: 2px solid black;}"
 				+ "</style> \n <title> Local, Merge stream Delays </title>\n</head>  \n");
 
-		// query the results
-		// post the results
+		// query the results and post/mail the results
 		for (String cluster : clusterList) {
 			ClusterHtml clusterHtml = new ClusterHtml(cluster);
-			LOG.info("AAAAAAAAAAAAAAA prepare the  query ");
 			AuditDbQuery auditQuery = new AuditDbQuery(endTimeStr, startTimeStr,
 					"TIER='LOCAL|MERGE',CLUSTER=" + cluster,
-					"TIER,TOPIC", "GMT", percentileStr);  // percentileString .. in 95 and 99
+					"TIER,TOPIC", "GMT", percentileStr); 
 			try {
-				//	LOG.info("AAAAAAAAAAA execute the query " + auditQuery.toString());
 				auditQuery.execute();
-				LOG.info("AAAAAAAAAAAAAA displaying the results : ");
+				LOG.info(" displaying the results : ");
 				auditQuery.displayResults();
-				LOG.info("AAAAAAAAAAAAA post the latency metrics " + metricValueStr);
-				//postLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
 			} catch (Exception e) {
-				System.out.println("Audit Query execute failed with exception: "
+				LOG.info("Audit Query execute failed with exception: "
 						+ e.getMessage());
 				e.printStackTrace();
 				return;
 			}
 			if (sendMail) {
-				try {
-					postLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				LOG.info("mail the latency metrics " + metricValueStr);
+				mailLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
+				
 			} else {
 				try {
 					postOnlyLatencyMetrics(auditQuery, metricValueStr, clusterUrlMap.get(cluster), clusterHtml);
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOG.info("Json Exception occured while trying to post the metrics for " + cluster);
 				}
 			}
 			if (sendMail) {
-				htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n<th col>90</th>\n<th>95</th>\n</tr>").append("\n");
+				htmlBody.append("<p></p><table BORDER=2 CELLPADDING=10> \n").append("<caption><b>").append(cluster+ " Latencies in minutes </b>").append("</caption>").append("<tr> \n <th>Cluster</th><th>StreamType</th> \n<th>Topic</th>\n");
+				for (String percentile : percentileStr.split(",")) {
+				  htmlBody.append("<th col>"+ Double.parseDouble(percentile) +" percentile</th>").append("\n");
+				}
 				htmlBody.append(clusterHtml.getLocalHtmlBody()).append("\n").append(clusterHtml.getMergeHtmlBody());
 				htmlBody.append("</table> ");
 			}
@@ -162,8 +156,8 @@ public class StreamLatencyMetrics {
 		}
 	}
 
-	private void postLatencyMetrics(AuditDbQuery auditQuery,
-			String startTimeStr, String url, ClusterHtml clusterHtml) throws JSONException {
+	private void mailLatencyMetrics(AuditDbQuery auditQuery,
+			String startTimeStr, String url, ClusterHtml clusterHtml) {
 		Set<Tuple> tupleSet = auditQuery.getTupleSet();
 		Map<Tuple, Map<Float, Integer>> percentileTupleMap = auditQuery.getPercentile();
 		String cluster = clusterHtml.getCluster();
@@ -178,7 +172,6 @@ public class StreamLatencyMetrics {
 						clusterHtml.prepareLocalTableRowData(tuple.getTopic());
 						mailMessagePerLocalCluster.put(cluster, new StringBuilder(tuple.getTopic()));
 					} else {
-						System.out.println("AAAAAAAAAAAAAA tuplesss " + tuple.toString());
 						clusterHtml.updateLocalHtmlBodyWithRows(tuple.getTopic());
 						mailMessagePerLocalCluster.get(cluster).append("\n           " + tuple.getTopic());
 					}
@@ -189,7 +182,6 @@ public class StreamLatencyMetrics {
 						clusterHtml.prepareMergeTableRowData(tuple.getTopic());
 						mailMessagePerMergeCluster.put(cluster, new StringBuilder(tuple.getTopic()));
 					} else {
-						System.out.println("AAAAAAAAAAAAAA tuplesss " + tuple.toString());
 						clusterHtml.updateMergeHtmlBodyWithRows(tuple.getTopic());
 						mailMessagePerMergeCluster.get(cluster).append("\n            " + tuple.getTopic());
 					}
@@ -213,10 +205,13 @@ public class StreamLatencyMetrics {
 				}
 			}
 		}
-		LOG.info("AAAAAAAAAAAAAAAAAA cluster   " + cluster + "   lcoal " + localRowCount + "   merge " + mergeRowCount);
+		LOG.info(" cluster   " + cluster + "   lcoal row sspan count: " + localRowCount + "   merge row span count: " + mergeRowCount);
 		clusterHtml.updateLocalMergeHtmlWithRowSpan(cluster, localRowCount, mergeRowCount);
 	}
 
+	/*
+	 * It prepares a result in json form and post it to the url 
+	 */
 	private void postOnlyLatencyMetrics(AuditDbQuery auditQuery,
 			String startTimeStr, String url, ClusterHtml clusterHtml) throws JSONException {
 		Set<Tuple> tupleSet = auditQuery.getTupleSet();
@@ -229,10 +224,8 @@ public class StreamLatencyMetrics {
 				Set<Float> percentileStr = auditQuery.getPercentileSet();				
 				for (Float percentileVal : percentileStr) {
 					Integer latencyValue = percentileMap.get(percentileVal);
-					// post metrics to the curl url
 					String percentile = String.valueOf(percentileVal).substring(0,
 							String.valueOf(percentileVal).indexOf('.'));
-
 					resultJson.put(tuple.getTier() + " " + percentile + " " + tuple.getTopic() , latencyValue);
 				}
 			}
@@ -241,13 +234,12 @@ public class StreamLatencyMetrics {
 		try {
 			postLatencies(resultJson, url);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.info("IOException occured while trying to post the metrics to " + url + " : ", e);
 		}
 	}
 
 	private void sendMail() {
-		System.out.println("going to send mail to recipient list");
+		LOG.info("going to send mail to recipient list");
 		List<String> emailIdList = new ArrayList<String>();
 		emailIdList.add("raju.bairishetti@inmobi.com");
 		emailIdList.add("raju.b41@gmail.com");
@@ -263,23 +255,23 @@ public class StreamLatencyMetrics {
 			con.setUseCaches(false);
 
 			con.connect();
-			LOG.info("AAAAAAAAAAA resultJson    : " + resultJson + "    connection " + con);
+			LOG.info("posting the resultJson    : " + resultJson + "  to  url " + con);
 			DataOutputStream wr = new DataOutputStream(con.getOutputStream());
 			wr.writeBytes("log=" + resultJson.toString());
 			wr.flush();
 			wr.close();
 
-			LOG.info("AAAAAAAAAAAA reading from the url using input stream ");
+			LOG.info("reading from the url using input stream ");
 			BufferedReader in = new BufferedReader(
 					new InputStreamReader(con.getInputStream()));
 			String decodedString;
 			while ((decodedString = in.readLine()) != null) {
-				LOG.info("AAAAAAAAAAAdecoded : " + decodedString);
+				LOG.info("decoded response : " + decodedString);
 			}
 			in.close();
 		} finally {
 			if (con != null) {
-				LOG.info("AAAAAAAAAAAAA disconnecting connection to bedner " );
+				LOG.info("disconnecting to bedner " );
 				con.disconnect();
 			}
 		}
@@ -318,7 +310,7 @@ public class StreamLatencyMetrics {
 			System.exit(-1);
 		}
 		for (int i = 0; i < args.length;) {
-			LOG.info("AAAAAAAAAA parsing inputs args " + args);
+			LOG.info(" parsing inputs args " + args);
 			if (args[i].equalsIgnoreCase("-streams")) {
 				streamStr = args[i+1];
 				i += 2;

@@ -15,7 +15,6 @@ import javax.mail.internet.MimeMultipart;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -39,8 +38,7 @@ public class EmailHelper {
     try {
       MimeMessage message = new MimeMessage(session);
       for (String emailId : emailIdList) {
-    	 System.out.println("Adding email address " + emailId + " to recipient list ........ mail message " + mailMessage + "  .. mime message " + message);
-        LOG.info("Adding email address " + emailId + " to recipient list.. mail  " + mailMessage);
+        LOG.info("Adding email address " + emailId + " to recipient list");
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(emailId));
       }
       message.setSubject("Conduit stream latencies " + host);

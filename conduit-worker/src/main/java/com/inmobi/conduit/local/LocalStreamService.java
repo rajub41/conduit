@@ -240,6 +240,7 @@ ConfigConstants {
       }
       Job job = createJob(tmpJobInputPath, totalSize);
       long jobStartTime = System.nanoTime();
+      // wait for complete
       job.waitForCompletion(true);
       long jobExecutionTimeInSecs = (System.nanoTime()
           - jobStartTime)/(NANO_SECONDS_IN_SECOND);
