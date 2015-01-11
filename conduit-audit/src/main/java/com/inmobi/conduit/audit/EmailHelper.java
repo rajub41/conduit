@@ -41,6 +41,7 @@ public class EmailHelper {
         LOG.info("Adding email address " + emailId + " to recipient list");
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(emailId));
       }
+      message.setFrom(new InternetAddress("ConduitStreamsLatencies@Weekly"));
       message.setSubject("Conduit stream latencies " + host);
       message.setSentDate(new Date());
       //message.setText(mailMessage);

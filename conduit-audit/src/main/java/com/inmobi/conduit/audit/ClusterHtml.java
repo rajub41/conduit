@@ -12,34 +12,28 @@ public class ClusterHtml {
     localHtmlBody = new StringBuilder();
     mergeHtmlBody = new StringBuilder();
   }
-  public boolean isProcessing() {
-    return isStartedProcessing;
-  }
-  public void setProcessing(boolean isProcessing) {
-    this.isStartedProcessing = isProcessing;
-  }
-  public String getCluster() {
+
+  protected String getCluster() {
     return cluster;
   }
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
-  }
 
-  public StringBuilder getLocalHtmlBody() {
+  protected StringBuilder getLocalHtmlBody() {
     return localHtmlBody;
   }
-  public void setLocalHtmlBody(StringBuilder localHtmlBody) {
+
+  protected void setLocalHtmlBody(StringBuilder localHtmlBody) {
     this.localHtmlBody = localHtmlBody;
   }
 
-  public StringBuilder getMergeHtmlBody() {
+  protected StringBuilder getMergeHtmlBody() {
     return mergeHtmlBody;
   }
-  public void setMergeHtmlBody(StringBuilder mergeHtmlBody) {
+
+  protected void setMergeHtmlBody(StringBuilder mergeHtmlBody) {
     this.mergeHtmlBody = mergeHtmlBody;
   }
 
-  void updateLocalMergeHtmlWithRowSpan(String cluster,
+  protected void updateLocalMergeHtmlWithRowSpan(String cluster,
       int localRowCount, int mergeRowCount) {
     int total = localRowCount + mergeRowCount;
     localHtmlBody.insert(0," <th rowspan=" + localRowCount + ">" + "LOCAL </th>");
@@ -49,21 +43,21 @@ public class ClusterHtml {
     mergeHtmlBody.append("</tr>").append("\n");
   }
 
-  void updateMergeHtmlBodyWithRows(String value) {
+  protected void updateMergeHtmlBodyWithRows(String value) {
     mergeHtmlBody.append("</tr> \n <tr>").append("\n");
     prepareMergeTableRowData(value);
   }
 
-  void updateLocalHtmlBodyWithRows(String value) {
+  protected void updateLocalHtmlBodyWithRows(String value) {
     localHtmlBody.append("</tr> \n <tr>").append("\n");
     prepareLocalTableRowData(value);
   }
 
-  void prepareMergeTableRowData(String value) {
+  protected void prepareMergeTableRowData(String value) {
     mergeHtmlBody.append("<td>" + value + "</td>").append("\n");
   }
 
-  void prepareLocalTableRowData(String value) {
+  protected void prepareLocalTableRowData(String value) {
     localHtmlBody.append("<td>" + value + "</td>").append("\n");
   }
 }

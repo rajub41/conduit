@@ -238,11 +238,11 @@ public class StreamLatencyMetrics {
     }
   }
 
-  private void sendMail() {
-    LOG.info("going to send mail to recipient list");
+  private void sendMail(String mailIdList) {
     List<String> emailIdList = new ArrayList<String>();
-    emailIdList.add("raju.bairishetti@inmobi.com");
-    emailIdList.add("raju.b41@gmail.com");
+    for (String mailId : mailIdList.split(",")) {
+      emailIdList.add(mailId);
+    }
     EmailHelper.sendMail(htmlBody.toString(), emailIdList);
   }
 
@@ -305,6 +305,7 @@ public class StreamLatencyMetrics {
     int relativeEndTimeInHours = 5;
     int relativeEndTimeInDays = 0;
     Boolean sendWeeklyMail = false;
+    String mailIdList = "raju.bairishetti@inmobi.com";
     if (args.length < 3) {
       printUsage();
       System.exit(-1);
@@ -338,7 +339,11 @@ public class StreamLatencyMetrics {
       } else if (args[i].equalsIgnoreCase("-sendMail")) {
         sendWeeklyMail = Boolean.parseBoolean(args[i+1]);
         i += 2;
-      } else {
+      } else if (args[i].equalsIgnoreCase("-mailIdList")) {
+        mailIdList = args[i+1];
+        i += 2;
+      }
+      else {
         printUsage();
       }
     }
@@ -348,7 +353,7 @@ public class StreamLatencyMetrics {
         percentileStr, relativeStartTimeInDays, relativeStartTimeInHours,
         relativeEndTimeInDays, relativeEndTimeInHours, sendWeeklyMail);
     if (sendWeeklyMail) {
-      latencyMetrics.sendMail();
+      latencyMetrics.sendMail(mailIdList);
     }
 
   }
